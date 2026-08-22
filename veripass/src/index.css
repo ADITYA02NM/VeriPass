@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Voxel-State Heritage — light */
+    --vp-ink: #010766;
+    --vp-ink-text: #010766;
+    --vp-cream: #fff9ec;
+    --vp-cream-text: #fff9ec;
+    --vp-surface: #fbf8ff;
+    --vp-on-surface: #1b1b21;
+    --vp-muted: #464651;
+    --vp-outline: #767683;
+    --vp-outline-variant: #c6c5d3;
+    --vp-container-low: #f5f2fa;
+    --vp-container: #efedf5;
+    --vp-container-high: #eae7ef;
+    --vp-container-highest: #e4e1e9;
+    --vp-white: #ffffff;
+    --vp-primary-fixed: #e0e0ff;
+    --vp-error-container: #ffdad6;
+    --vp-error: #c62828;
+    --vp-success-container: #e8f5e9;
+    --vp-green: #41ad31;
+    --vp-green-text: #41ad31;
+    --vp-saffron: #fe9832;
+    --vp-saffron-text: #fe9832;
+    --vp-magenta: #E91E63;
+    --vp-magenta-text: #E91E63;
+    --vp-cyan: #00E5FF;
+    --vp-black: #121212;
+    --vp-black-text: #000000;
+    --vp-white-text: #ffffff;
+  }
+
+  .dark {
+    /* Voxel-State Heritage — dark (AI-good palette) */
+    --vp-ink: #010766;
+    --vp-ink-text: #bdc2ff;
+    --vp-cream: #1e1e26;
+    --vp-cream-text: #f2eff7;
+    --vp-surface: #121218;
+    --vp-on-surface: #e4e1e9;
+    --vp-muted: #c6c5d3;
+    --vp-outline: #8f8f9d;
+    --vp-outline-variant: #c6c5d3;
+    --vp-container-low: #1a1a22;
+    --vp-container: #1e1e26;
+    --vp-container-high: #23232c;
+    --vp-container-highest: #282832;
+    --vp-white: #17171e;
+    --vp-primary-fixed: #2a2f6e;
+    --vp-error-container: #93000a;
+    --vp-error: #ffb4ab;
+    --vp-success-container: #1b3a1b;
+    --vp-green: #688e5c;
+    --vp-green-text: #a9d29a;
+    --vp-saffron: #fea85a;
+    --vp-saffron-text: #fea85a;
+    --vp-magenta: #ff6b8a;
+    --vp-magenta-text: #ff6b8a;
+    --vp-cyan: #00E5FF;
+    --vp-black: #0a0a0f;
+    --vp-black-text: #000000;
+    --vp-white-text: #ffffff;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--vp-surface);
+    color: var(--vp-on-surface);
+  }
+}
+
+.font-pixel {
+  font-family: 'VT323', monospace;
+}
+
+.font-headline {
+  font-family: 'Courier Prime', monospace;
+}
+
+.voxel-border {
+  border: 2px solid var(--vp-ink);
+  border-radius: 8px;
+}
+
+.voxel-border-magenta {
+  border: 2px solid var(--vp-magenta);
+  border-radius: 8px;
+}
+
+.voxel-border-saffron {
+  border: 2px solid var(--vp-saffron);
+  border-radius: 8px;
+}
+
+.voxel-border-cyan {
+  border: 2px solid var(--vp-cyan);
+  border-radius: 8px;
+}
+
+.voxel-shadow {
+  box-shadow: 4px 4px 0px 0px var(--vp-ink);
+}
+
+.voxel-shadow-saffron {
+  box-shadow: 4px 4px 0px 0px var(--vp-saffron);
+}
+
+.voxel-shadow-magenta {
+  box-shadow: 4px 4px 0px 0px var(--vp-magenta);
+}
+
+.voxel-shadow-cyan {
+  box-shadow: 4px 4px 0px 0px var(--vp-cyan);
+}
+
+.voxel-shadow-sm {
+  box-shadow: 2px 2px 0px 0px var(--vp-ink);
+}
+
+.voxel-shadow-sm-saffron {
+  box-shadow: 2px 2px 0px 0px var(--vp-saffron);
+}
+
+.voxel-btn-active:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px 0px !important;
+}
+
+/* input focus glow — 3px ink border + cyan offset */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 3px solid var(--vp-cyan);
+  outline-offset: 2px;
+  border-color: var(--vp-ink) !important;
+}
+
+@keyframes scanline {
+  0% {
+    top: 5%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 95%;
+    opacity: 0;
+  }
+}
+
+.scanner-line {
+  animation: scanline 2.2s linear infinite;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-fill {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}

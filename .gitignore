@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+bun.lock
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# SSL Certs
+certs/
+
+# Logs
+*.log
+
+# Frontend build output
+veripass/dist/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Sensitive dev files
+ips.md
+testnet-account.json
+
+# Temp
+/tmp/
