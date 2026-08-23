@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
+import Markdown from 'react-markdown';
 import { ScreenType } from '../types';
 import { TopAppBar } from '../components/TopAppBar';
 import { aiChat, getUsage, ApiError, AiChatMessage, UserInfo, UsageInfo } from '../lib/api';
+import { autoX402Pay } from '../lib/x402pay';
 
 interface AIChatScreenProps {
   onNavigate: (screen: ScreenType, transition?: 'push' | 'push_back' | 'none') => void;
@@ -9,20 +11,55 @@ interface AIChatScreenProps {
 }
 
 const SUGGESTIONS = [
-  'Inventory Agent (0.003) — How many products are in my inventory?',
-  'Search Agent (0.005) — Find products matching tea',
-  'Compare Agent (0.005) — Compare MED-2026-004 and FAKE-WATCH-7',
-  'Market Agent (0.004) — What is the market price of DJ-TEA-2023-8991?',
+  'Inventory Agent — How many products are in my inventory?',
+  'Search Agent — Find products matching tea',
+  'Compare Agent — Compare MED-2026-004 and FAKE-WATCH-7',
+  'Market Agent — What is the market price of DJ-TEA-2023-8991?',
 ];
+
+/** Markdown components styled to match the VeriPass pixel theme. */
+const markdownComponents = {
+  p: (props: any) => <p className="text-[14px] leading-relaxed my-1.5 first:mt-0 last:mb-0" {...props} />,
+  ul: (props: any) => <ul className="list-disc pl-5 my-1.5 space-y-1 text-[14px]" {...props} />,
+  ol: (props: any) => <ol className="list-decimal pl-5 my-1.5 space-y-1 text-[14px]" {...props} />,
+  li: (props: any) => <li className="leading-relaxed" {...props} />,
+  strong: (props: any) => <strong className="font-bold text-[var(--vp-saffron-text)]" {...props} />,
+  em: (props: any) => <em className="italic" {...props} />,
+  code: ({ inline, className, children, ...props }: any) =>
+    inline ? (
+      <code className="bg-[var(--vp-container-low)] border border-[var(--vp-ink)]/30 px-1.5 py-0.5 rounded font-mono text-[13px] text-[var(--vp-cyan-text)]" {...props}>
+        {children}
+      </code>
+    ) : (
+      <pre className="bg-[var(--vp-ink)] text-[var(--vp-cream-text)] border-2 border-[var(--vp-ink)] p-3 my-2 overflow-x-auto font-mono text-[13px]" {...props}>
+        <code>{children}</code>
+      </pre>
+    ),
+  pre: (props: any) => <div {...props} />,
+  h1: (props: any) => <h1 className="font-pixel text-[17px] uppercase tracking-wider mt-2 mb-1" {...props} />,
+  h2: (props: any) => <h2 className="font-pixel text-[16px] uppercase tracking-wider mt-2 mb-1" {...props} />,
+  h3: (props: any) => <h3 className="font-pixel text-[15px] uppercase tracking-wider mt-2 mb-1" {...props} />,
+  blockquote: (props: any) => <blockquote className="border-l-4 border-[var(--vp-saffron)] pl-3 my-2 italic text-[var(--vp-muted)]" {...props} />,
+  a: (props: any) => <a className="text-[var(--vp-cyan-text)] underline break-all" target="_blank" rel="noreferrer" {...props} />,
+  hr: () => <hr className="border-[var(--vp-outline)] my-2" />,
+  table: (props: any) => (
+    <div className="overflow-x-auto my-2">
+      <table className="border-collapse border-2 border-[var(--vp-ink)] text-[13px]" {...props} />
+    </div>
+  ),
+  th: (props: any) => <th className="border border-[var(--vp-ink)] bg-[var(--vp-container-low)] px-2 py-1 font-pixel text-[12px] uppercase" {...props} />,
+  td: (props: any) => <td className="border border-[var(--vp-ink)] px-2 py-1" {...props} />,
+};
 
 /**
  * VeriPass AI — agentic orchestrator managing 7 specialist agents.
- * COST: 0.003–0.005 ALGO per question via x402 pay-per-use (direct Algorand payment).
+ * COST: 0.003–0.005 ALGO per question via x402 — paid AUTOMATICALLY.
  */
 export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) => {
   const [messages, setMessages] = useState<AiChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
+  const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
@@ -34,22 +71,39 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, thinking]);
+  }, [messages, thinking, paying]);
 
   const handleSend = async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || thinking) return;
+    if (!trimmed || thinking || paying) return;
     const history = messages.slice(-8);
     setMessages((m) => [...m, { role: 'user', content: trimmed }]);
     setInput('');
     setThinking(true);
     setError(null);
     try {
-      const res = await aiChat(trimmed, history);
+      let res;
+      try {
+        res = await aiChat(trimmed, history);
+      } catch (e) {
+        // ---- AUTO-PAY: 402 → pay silently → retry once ----
+        if (e instanceof ApiError && e.status === 402) {
+          setPaying(true);
+          try {
+            await autoX402Pay(user?.walletAddress, '0.005');
+            res = await aiChat(trimmed, history);
+          } finally {
+            setPaying(false);
+          }
+        } else {
+          throw e;
+        }
+      }
       setMessages((m) => [...m, { role: 'assistant', content: res.reply }]);
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 402) {
-        setError('PAYMENT REQUIRED — 0.003–0.005 ALGO via x402 Algorand payment to use AI');
+    } catch (e: any) {
+      console.error('[ai-chat]', e);
+      if (e?.message?.includes('connected') || e?.message?.includes('declined')) {
+        setError('PAYMENT CANCELLED IN WALLET — approve the Pera prompt to use AI');
       } else {
         setError(e instanceof ApiError ? e.message : 'AI SERVICE ERROR — TRY AGAIN');
       }
@@ -73,7 +127,7 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[var(--vp-cyan)]">auto_awesome</span>
             <span className="font-pixel text-[14px] uppercase tracking-wider">
-              {user ? user.identifier : 'guest'} · x402 PAY-PER-USE · 0.003–0.005 ALGO/QUESTION
+              {user ? user.identifier : 'guest'} · x402 AUTO-PAY · ≤0.005 ALGO/QUESTION
             </span>
           </div>
         </section>
@@ -103,16 +157,16 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
 
         {/* ============ Chat area ============ */}
         <section className="flex-1 flex flex-col gap-3 overflow-y-auto max-h-[55vh] pr-1">
-          {messages.length === 0 && !thinking && (
+          {messages.length === 0 && !thinking && !paying && (
             <div className="flex flex-col gap-3">
               <div className="bg-[var(--vp-white)] border-2 border-[var(--vp-ink)] p-4 voxel-shadow">
                 <p className="font-pixel text-[16px] text-[var(--vp-ink-text)] uppercase tracking-wider">
                   Ask me anything about your supply chain
                 </p>
                 <p className="text-[14px] text-[var(--vp-muted)] mt-1">
-I manage 7 specialist agents (Inventory, Passport, Market, Usage, Proof,
-Search, Compare). Ask anything — 0.003–0.005 ALGO per question
-via x402 Algorand pay-per-use.
+                  I manage 7 specialist agents (Inventory, Passport, Market, Usage, Proof,
+                  Search, Compare). Payments happen automatically via x402 — no prompts,
+                  just answers. Max 0.005 ALGO per question.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -138,14 +192,26 @@ via x402 Algorand pay-per-use.
                   : 'self-start bg-[var(--vp-white)] text-[var(--vp-ink-text)] voxel-shadow'
               }`}
             >
-              <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{m.content}</p>
+              {m.role === 'assistant' ? (
+                <Markdown components={markdownComponents}>{m.content}</Markdown>
+              ) : (
+                <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{m.content}</p>
+              )}
             </div>
           ))}
 
-          {thinking && (
+          {thinking && !paying && (
             <div className="self-start bg-[var(--vp-white)] border-2 border-[var(--vp-ink)] px-4 py-3 voxel-shadow">
               <p className="font-pixel text-[13px] text-[var(--vp-ink-text)] uppercase tracking-widest animate-pulse">
                 VeriPass AI is thinking…
+              </p>
+            </div>
+          )}
+          {paying && (
+            <div className="self-start bg-[var(--vp-success-container)] border-2 border-[var(--vp-green)] px-4 py-3 voxel-shadow">
+              <p className="font-pixel text-[13px] text-[var(--vp-green-text)] uppercase tracking-widest animate-pulse flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">bolt</span>
+                Paying agents via x402…
               </p>
             </div>
           )}
@@ -169,10 +235,10 @@ via x402 Algorand pay-per-use.
           />
           <button
             onClick={() => handleSend(input)}
-            disabled={thinking || !input.trim()}
+            disabled={thinking || paying || !input.trim()}
             className="font-pixel text-[14px] uppercase tracking-wider bg-[var(--vp-ink)] text-[var(--vp-cream-text)] border-2 border-[var(--vp-ink)] px-4 py-3 voxel-shadow-sm hover:bg-[var(--vp-saffron)] hover:text-[var(--vp-black-text)] disabled:opacity-40 transition-all cursor-pointer"
           >
-            {thinking ? '…' : 'Send'}
+            {thinking || paying ? '…' : 'Send'}
           </button>
         </div>
       </main>
