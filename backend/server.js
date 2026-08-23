@@ -10,7 +10,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import https from 'node:https';
 import { fileURLToPath } from 'node:url';
-import { createHash, randomInt, createPrivateKey } from 'node:crypto';
+import { createHash, randomInt, createPrivateKey, generateKeyPairSync, createSign, createVerify } from 'node:crypto';
 import algosdk from 'algosdk';
 import QRCode from 'qrcode';
 import {
@@ -241,7 +241,6 @@ app.get('/api/verify/:code', async (c) => {
 app.get('/api/health', (c) => c.json({ status: 'ok' }));
 
 // ================= OTP — send & verify (password reset + email verification) =================
-import { randomInt } from 'node:crypto';
 
 function generateOtp() { return String(randomInt(100000, 999999)); }
 
@@ -410,7 +409,6 @@ app.post('/api/auth/link-wallet', async (c) => {
 });
 
 // ================= DIGITAL SIGNATURES — custom crypto sigs (hidden for User role) =================
-import { generateKeyPairSync, createSign, createVerify } from 'node:crypto';
 
 app.get('/api/signatures', async (c) => {
   const u = auth(c);
