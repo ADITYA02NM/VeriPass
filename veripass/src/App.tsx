@@ -112,6 +112,7 @@ export default function App() {
             onConsumeSignature={() => setPendingSignature(null)}
             restartToken={scanRestartToken}
             onOpenHistory={handleOpenHistory}
+            onRequestPayment={handleRequestPayment}
           />
         );
       case 'inventory':

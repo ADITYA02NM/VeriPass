@@ -24,6 +24,7 @@ interface ScanScreenProps {
   onConsumeSignature: () => void;
   restartToken?: number;
   onOpenHistory: (code: string) => void;
+  onRequestPayment: (code: string) => void;
 }
 
 const ROLE_TO_KIND: Record<string, 'production' | 'shipment' | 'receipt'> = {
@@ -41,6 +42,7 @@ export const ScanScreen: React.FC<ScanScreenProps> = ({
   onConsumeSignature,
   restartToken,
   onOpenHistory,
+  onRequestPayment,
 }) => {
   const [code, setCode] = useState(initialCode ?? '');
   const [product, setProduct] = useState<ProductPayload | null>(null);
@@ -316,7 +318,7 @@ export const ScanScreen: React.FC<ScanScreenProps> = ({
           {freeTierExhausted && (
             <button
               type="button"
-              onClick={() => onNavigate('wallet', 'push')}
+              onClick={() => onRequestPayment(code)}
               className="shrink-0 bg-[var(--vp-saffron)] text-[var(--vp-ink-text)] font-pixel text-[17px] py-2 px-4 border-2 border-[var(--vp-ink)] voxel-shadow-sm voxel-btn-active flex items-center justify-center gap-2 transition-all hover:bg-[#e8871f] cursor-pointer"
             >
               <span className="material-symbols-outlined text-lg">account_balance_wallet</span>
