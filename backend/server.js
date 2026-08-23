@@ -519,7 +519,7 @@ app.post('/api/x402/client-pay', async (c) => {
   if (!txId || !sender) return c.json({ error: 'txId and sender required' }, 400);
   const amt = amount || X402.amount;
 
-  // Verify on-chain — confirm the tx actually exists and is confirmed
+  // Verify on-chain — confirm the tx actually exists, is confirmed, and is correct
   const NETWORK = 'testnet-v1.0';
   let round = 0;
   try {
@@ -527,6 +527,20 @@ app.post('/api/x402/client-pay', async (c) => {
     const confirmed = await algod.pendingTransactionInformation(txId).do();
     round = Number(confirmed.confirmedRound ?? confirmed['confirmed-round'] ?? 0);
     if (!round) return c.json({ error: 'Transaction not yet confirmed on-chain. Wait a moment and try again.' }, 402);
+    
+    // Verify tx details
+    const txn = confirmed.txn?.txn;
+    if (!txn || txn.type !== 'pay') return c.json({ error: 'Invalid transaction type' }, 400);
+    
+    const actualReceiver = algosdk.encodeAddress(txn.rcv);
+    if (actualReceiver !== X402.receiverAddress) {
+      return c.json({ error: 'Transaction receiver does not match platform address' }, 400);
+    }
+    
+    const actualAmount = Number(txn.amt || 0);
+    if (actualAmount < 2000) {
+      return c.json({ error: 'Transaction amount too low' }, 400);
+    }
   } catch (e) {
     console.error('[x402] client-pay on-chain verify failed:', e.message);
     return c.json({ error: 'Could not verify transaction on-chain: ' + e.message }, 402);
