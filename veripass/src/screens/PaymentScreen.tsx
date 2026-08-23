@@ -59,7 +59,7 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ onNavigate, code, 
         to: PLATFORM_RECEIVER,
         amount: AMOUNT_MICRO,
         suggestedParams,
-        note: new TextEncoder().encode('VeriPass x402 verification'),
+        note: new TextEncoder().encode('VeriPass product verification report (x402 · Algorand)'),
       });
 
       // Sign with Pera

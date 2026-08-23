@@ -14,21 +14,15 @@ async function send(amountMicro) {
     receiver: merchant,
     amount: amountMicro,
     suggestedParams,
-    note: new TextEncoder().encode('VeriPass manual testing'),
+    note: new TextEncoder().encode('VeriPass product verification report (x402 · Algorand)'),
   });
   
   const signedTxn = txn.signTxn(account.sk);
   const sent = await algod.sendRawTransaction(signedTxn).do();
   const txId = sent.txId ?? sent.txid;
-  console.log(`\n✅ Sent ${amountMicro / 1e6} ALGO`);
   console.log(`Transaction ID: ${txId}`);
   
   await algosdk.waitForConfirmation(algod, txId, 10);
-  console.log(`Status: Confirmed on TestNet`);
 }
 
-async function main() {
-  await send(2000);
-  await send(3000);
-}
-main();
+send(2000);
