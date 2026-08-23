@@ -38,9 +38,15 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ onNavigate, code, 
     setError(null);
     setMode('signing');
     try {
-      // Ensure Pera is connected
-      const accounts = await peraWallet.connect();
-      const sender = accounts[0];
+      // Try silent reconnect first (no modal), only open modal if needed
+      let accounts: string[] = [];
+      try {
+        accounts = await peraWallet.reconnectSession();
+      } catch {
+        // No existing session — open connect modal
+        accounts = await peraWallet.connect();
+      }
+      const sender = accounts[0] || user?.walletAddress;
       if (!sender) throw new Error('No Pera wallet address returned');
 
       // Get suggested params from AlgoNode
