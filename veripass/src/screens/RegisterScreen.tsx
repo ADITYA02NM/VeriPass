@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ScreenType, UserRole } from '../types';
-import { register, setSession, ApiError } from '../lib/api';
+import { register, setSession, ApiError, linkWallet } from '../lib/api';
 
 interface RegisterScreenProps {
   onNavigate: (screen: ScreenType, transition?: 'push' | 'push_back' | 'none') => void;
@@ -15,6 +15,12 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNavigate, onLo
   const [selectedRole, setSelectedRole] = useState<UserRole>('User');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Mnemonic state
+  const [mnemonic, setMnemonic] = useState('');
+  const [showMnemonic, setShowMnemonic] = useState(false);
+  const [mnemonicLinked, setMnemonicLinked] = useState(false);
+  const [mnemonicError, setMnemonicError] = useState<string | null>(null);
 
   const roles: { label: string; value: UserRole; icon: string }[] = [
     { label: 'User', value: 'User', icon: 'person' },
@@ -34,6 +40,17 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNavigate, onLo
     try {
       const { token, user } = await register(username.trim(), passkey, username.trim(), email.trim() || undefined, selectedRole);
       setSession(token, user);
+
+      // If mnemonic was provided, link wallet (mnemonic is sent over HTTPS once, then discarded)
+      if (mnemonic.trim() && !mnemonicLinked) {
+        try {
+          await linkWallet(mnemonic.trim());
+          setMnemonicLinked(true);
+        } catch {
+          // Non-critical — user can link wallet later from profile
+        }
+      }
+
       onLogin(user);
       onNavigate('scan', 'push');
     } catch (err) {
@@ -51,10 +68,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNavigate, onLo
           onClick={() => onNavigate('login', 'push_back')}
           className="flex items-center gap-2 text-[var(--vp-ink-text)] cursor-pointer"
         >
-          <span
-            className="material-symbols-outlined text-3xl"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
+          <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
             fingerprint
           </span>
           <span className="font-extrabold text-2xl tracking-tighter uppercase text-[var(--vp-ink-text)]">
@@ -72,29 +86,22 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNavigate, onLo
       <main className="max-w-3xl mx-auto w-full px-4 md:px-8 py-8 flex flex-col gap-8 flex-grow">
         {/* Progress Tracker */}
         <section className="w-full max-w-xl mx-auto flex items-center justify-between relative px-4 mt-2">
-          {/* Connecting Line */}
           <div className="absolute top-1/2 left-0 w-full h-[4px] bg-[var(--vp-ink)] -z-0 transform -translate-y-1/2" />
-
-          {/* Node 1 */}
           <div className="flex flex-col items-center gap-2 bg-[var(--vp-cream)] px-3 z-10">
             <div className="w-6 h-6 border-2 border-[var(--vp-ink)] bg-[var(--vp-green)] shadow-[2px_2px_0px_0px_rgba(1,7,102,1)]" />
             <span className="font-pixel text-[15px] text-[var(--vp-ink-text)] font-bold">ENTITY</span>
           </div>
-
-          {/* Node 2 */}
           <div className="flex flex-col items-center gap-2 bg-[var(--vp-cream)] px-3 z-10">
             <div className="w-6 h-6 border-2 border-[var(--vp-ink)] bg-[var(--vp-cream)] shadow-[2px_2px_0px_0px_rgba(1,7,102,1)]" />
             <span className="font-pixel text-[15px] text-[var(--vp-outline)]">VERIFY</span>
           </div>
-
-          {/* Node 3 */}
           <div className="flex flex-col items-center gap-2 bg-[var(--vp-cream)] px-3 z-10">
             <div className="w-6 h-6 border-2 border-[var(--vp-ink)] bg-[var(--vp-cream)] shadow-[2px_2px_0px_0px_rgba(1,7,102,1)]" />
             <span className="font-pixel text-[15px] text-[var(--vp-outline)]">SECURE</span>
           </div>
         </section>
 
-        {/* Header Section */}
+        {/* Header */}
         <section>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--vp-ink-text)] mb-2 uppercase tracking-tight">
             ENTITY REGISTRATION
@@ -104,7 +111,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNavigate, onLo
           </p>
         </section>
 
-        {/* Form Section */}
+        {/* Form */}
         <div className="bg-[var(--vp-cream)] p-6 md:p-8 border-2 border-[var(--vp-ink)] voxel-shadow">
           <h2 className="font-pixel text-[18px] text-[var(--vp-ink-text)] uppercase mb-6 font-bold tracking-wider">
             IDENTITY DATA
@@ -137,10 +144,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNavigate, onLo
 
             {/* Username */}
             <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="username"
-                className="font-pixel text-[15px] text-[var(--vp-ink-text)] uppercase tracking-wider"
-              >
+              <label htmlFor="username" className="font-pixel text-[15px] text-[var(--vp-ink-text)] uppercase tracking-wider">
                 USERNAME
               </label>
               <input
@@ -155,10 +159,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNavigate, onLo
 
             {/* Contact Email */}
             <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="contactEmail"
-                className="font-pixel text-[15px] text-[var(--vp-ink-text)] uppercase tracking-wider"
-              >
+              <label htmlFor="contactEmail" className="font-pixel text-[15px] text-[var(--vp-ink-text)] uppercase tracking-wider">
                 CONTACT EMAIL
               </label>
               <input
@@ -173,10 +174,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNavigate, onLo
 
             {/* Passkey */}
             <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="passkey"
-                className="font-pixel text-[15px] text-[var(--vp-ink-text)] uppercase tracking-wider"
-              >
+              <label htmlFor="passkey" className="font-pixel text-[15px] text-[var(--vp-ink-text)] uppercase tracking-wider">
                 PASSKEY
               </label>
               <input
@@ -191,10 +189,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNavigate, onLo
 
             {/* Confirm Passkey */}
             <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="confirmPasskey"
-                className="font-pixel text-[15px] text-[var(--vp-ink-text)] uppercase tracking-wider"
-              >
+              <label htmlFor="confirmPasskey" className="font-pixel text-[15px] text-[var(--vp-ink-text)] uppercase tracking-wider">
                 CONFIRM PASSKEY
               </label>
               <input
@@ -207,12 +202,54 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNavigate, onLo
               />
             </div>
 
-            {/* Action Button: xpath //button[contains(., 'REGISTER ENTITY')] */}
+            {/* Mnemonic / Wallet Key (Optional) */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="mnemonic" className="font-pixel text-[15px] text-[var(--vp-ink-text)] uppercase tracking-wider flex items-center gap-2">
+                ALGORAND MNEMONIC
+                <span className="font-pixel text-[12px] text-[var(--vp-muted)] normal-case">(OPTIONAL)</span>
+              </label>
+              <div className="relative">
+                <input
+                  id="mnemonic"
+                  type={showMnemonic ? 'text' : 'password'}
+                  value={mnemonic}
+                  onChange={(e) => { setMnemonic(e.target.value); setMnemonicLinked(false); }}
+                  placeholder="25-word Algorand testnet mnemonic"
+                  className="w-full p-3 pr-12 font-pixel text-[16px] text-[var(--vp-on-surface)] bg-[var(--vp-white)] border-2 border-[var(--vp-ink)] focus:outline-none focus:border-[var(--vp-cyan)] transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowMnemonic(!showMnemonic)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-[var(--vp-container)] transition-colors cursor-pointer"
+                  aria-label={showMnemonic ? 'Hide mnemonic' : 'Show mnemonic'}
+                >
+                  <span className="material-symbols-outlined text-xl text-[var(--vp-ink-text)]">
+                    {showMnemonic ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
+              <p className="font-pixel text-[13px] text-[var(--vp-muted)] mt-0.5">
+                Your mnemonic is sent over HTTPS once to derive your wallet address, then immediately discarded. It is never stored.
+              </p>
+              {mnemonicLinked && (
+                <p className="font-pixel text-[14px] text-[var(--vp-green-text)] flex items-center gap-1">
+                  <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                  Wallet linked successfully
+                </p>
+              )}
+              {mnemonicError && (
+                <p className="font-pixel text-[14px] text-[var(--vp-error)]">{mnemonicError}</p>
+              )}
+            </div>
+
+            {/* Error */}
             {error && (
               <div className="p-3 border-2 border-[var(--vp-error)] bg-[var(--vp-error-container)] text-[var(--vp-error)] font-pixel text-[14px]">
                 {error}
               </div>
             )}
+
+            {/* Submit */}
             <div className="mt-4 flex justify-end">
               <button
                 type="submit"

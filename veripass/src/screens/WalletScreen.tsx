@@ -94,35 +94,37 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ onNavigate }) => {
               </div>
             </div>
 
-            {/* Spending Limit */}
+            {/* Spending Limit Scroller */}
             <div className="border-t-2 border-[var(--vp-ink)]/20 pt-3">
               <p className="font-pixel text-[14px] text-[var(--vp-outline)] uppercase mb-2">
                 AI Spending Limit: {spending.spendLimit} ALGO
               </p>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {LIMIT_OPTIONS.map((v) => (
+              <div className="overflow-x-auto scrollbar-hide mb-3 -mx-1 px-1">
+                <div className="flex gap-2 min-w-max">
+                  {LIMIT_OPTIONS.map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setSelectedLimit(v)}
+                      className={`font-pixel text-[13px] uppercase tracking-wider border-2 border-[var(--vp-ink)] px-4 py-2 shrink-0 transition-all cursor-pointer ${
+                        selectedLimit === v
+                          ? 'bg-[var(--vp-ink)] text-[var(--vp-cream-text)]'
+                          : 'bg-[var(--vp-cream)] text-[var(--vp-ink-text)] hover:bg-[var(--vp-container-high)]'
+                      }`}
+                    >
+                      {v} ALGO
+                    </button>
+                  ))}
                   <button
-                    key={v}
-                    onClick={() => setSelectedLimit(v)}
-                    className={`font-pixel text-[13px] uppercase tracking-wider border-2 border-[var(--vp-ink)] px-3 py-1.5 transition-all cursor-pointer ${
-                      selectedLimit === v
+                    onClick={() => setSelectedLimit(null)}
+                    className={`font-pixel text-[13px] uppercase tracking-wider border-2 border-[var(--vp-ink)] px-4 py-2 shrink-0 transition-all cursor-pointer ${
+                      selectedLimit === null
                         ? 'bg-[var(--vp-ink)] text-[var(--vp-cream-text)]'
                         : 'bg-[var(--vp-cream)] text-[var(--vp-ink-text)] hover:bg-[var(--vp-container-high)]'
                     }`}
                   >
-                    {v} ALGO
+                    No Limit
                   </button>
-                ))}
-                <button
-                  onClick={() => setSelectedLimit(null)}
-                  className={`font-pixel text-[13px] uppercase tracking-wider border-2 border-[var(--vp-ink)] px-3 py-1.5 transition-all cursor-pointer ${
-                    selectedLimit === null
-                      ? 'bg-[var(--vp-ink)] text-[var(--vp-cream-text)]'
-                      : 'bg-[var(--vp-cream)] text-[var(--vp-ink-text)] hover:bg-[var(--vp-container-high)]'
-                  }`}
-                >
-                  No Limit
-                </button>
+                </div>
               </div>
               <button
                 onClick={handleSaveLimit}

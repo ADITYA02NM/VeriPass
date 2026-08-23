@@ -300,7 +300,30 @@ GEMINI_API_KEY=your-gemini-key
 VERIPASS_SECRET=your-hmac-secret
 ```
 
-> **Note**: Wallet addresses and payment configuration are managed in `backend/data/wallets.json` (not committed to repo).
+> **Note**: Wallet addresses and payment configuration are managed in `backend/data/wallets.json`.
+
+### TestNet Accounts (for testing)
+
+All accounts are on Algorand TestNet. Each wallet has its own mnemonic for signing transactions.
+
+| Account | Address | Mnemonic | Balance | Role |
+|---|---|---|---|---|
+| **Platform Receiver** | `FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M` | `biology direct hollow brother arrow sibling wrist grape ketchup dress raven enjoy pause brain obscure evil margin cereal host artist alone disagree vault ability invest` | ~3.328 ALGO | Merchant (receives payments) |
+| **User** | `QSOFH5G2PSNYVO3S5DF5UY2PKQJXQGQ6SZHQOFQ5TFADT5Y4QWEI746B7E` | `require inject gadget clutch start crumble treat oppose victory lab idle wait tide sword worth panda march exhaust fiction nature misery ranch soft absorb turtle` | Unfunded | User role (buyer/scanner) |
+| **Ravi** | `DG7KHLVTS3XI42AYG5KXAISTIGIFFB4LG7WAWA6ICBDEG3B6NA4BFKWFHY` | `tool alert hazard pass pistol gold insane practice sister guard token agent violin service brother mountain frog consider dance inside noble width diamond able scare` | ~3.328 ALGO | Test buyer |
+| **Producer** | `EKLDBPKGINAY53RP4PQUTWDLBIVJTM5VVR2A3PXGNSUQ4X3QWGFQCYJ5V4` | `brief net busy jungle iron legend ahead bulb bonus mouse bundle impact hedgehog minor wool cupboard pen evolve prevent wedding begin finger exhaust above track` | ~3.328 ALGO | Producer role |
+| **Logistics** | `RCZT2Z3WKAR2OX5HUFWG7CEQAEICEDD4H2KGIWQEYCQQB4HCXW4ZQP54ZE` | `notice echo bargain bulk buffalo library master choose holiday obtain gold sad provide attend pattern hazard job depth fire turtle board teach lyrics abstract tragic` | ~3.328 ALGO | Logistics role |
+| **Retailer** | `HFHJPLT3QW6DTMHSENJODFZCAV5XUYG3XMGTMXL5XH32OI2ACYOKRO4KCU` | `parrot oyster axis muscle cupboard asthma tool drum apology topple ticket favorite airport setup away mosquito usage mandate typical erupt inquiry record submit above float` | ~3.328 ALGO | Retailer role |
+| **TestNet Faucet** | `QXEMYGSAHRJPLX3XPNRNPFNDPKTMAWKDDNZSOG7HICAJTK5AB636DZD6JI` | `river match sentence paper ticket desert zone route home catalog october lava gift plate ceiling glimpse truly decline exile holiday extra first stomach abandon volcano` | ~10 ALGO | Funded via AlgoKit dispenser |
+
+> **Note**: Fund wallets via the [Lora TestNet Faucet](https://lora.algokit.io/testnet/fund). Each account has ~3.328 ALGO funded for testing. The User account is intentionally unfunded to test wallet funding flow.
+
+### Merchant Account (Platform Receiver)
+
+The platform receiver wallet collects all x402 micropayments:
+- **Address:** `FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M`
+- **Fund Tx:** `BGX4HS7GXWF6IJSQRT32BCKJNOYTMQPNYC743O6XIM4PGZPCP3LA`
+- **Explorer:** [View on Lora](https://lora.algokit.io/testnet/account/FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M)
 
 ---
 
@@ -310,6 +333,26 @@ VERIPASS_SECRET=your-hmac-secret
 - `POST /api/auth/login` — Login with identifier + passkey
 - `POST /api/auth/register` — Create new account
 - `POST /api/auth/wallet` — Login via Pera Wallet (wallet address)
+- `POST /api/auth/send-otp` — Send OTP to email (for password reset)
+- `POST /api/auth/verify-otp` — Verify OTP code
+- `POST /api/auth/reset-password` — Reset password via OTP
+- `POST /api/auth/google` — Login/register via Google OAuth
+- `POST /api/auth/link-wallet` — Link mnemonic to derive wallet address (mnemonic not stored)
+- `POST /api/auth/backup-codes/generate` — Generate 8 backup codes
+- `GET /api/auth/backup-codes` — List backup codes with used status
+- `POST /api/auth/backup-codes/use` — Mark a backup code as used
+
+### Security
+- `POST /api/biometric/toggle` — Enable/disable biometric authentication
+
+### Digital Signatures (Producer/Logistics/Retailer only)
+- `GET /api/signatures` — List digital signatures (403 for User role)
+- `POST /api/signatures/create` — Create ed25519 key pair
+- `POST /api/signatures/sign` — Sign data with stored private key
+- `POST /api/signatures/revoke` — Revoke a signature
+
+### Session
+- `POST /api/session/terminate` — Terminate session (deletes wallet users entirely)
 
 ### Product Verification
 - `GET /api/verify/:code` — Verify product (x402 paid: 0.002 ALGO)

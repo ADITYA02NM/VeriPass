@@ -2,6 +2,9 @@ services:
   - type: web
     name: veripass
     runtime: node
-    buildCommand: cd backend && npm install
+    buildCommand: cd veripass && npm install && npm run build && cd ../backend && npm install
     startCommand: cd backend && node server.js
     healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production

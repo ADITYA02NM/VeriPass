@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VeriPass — Privacy, Terms & Conditions</title>
+  <style>
+    :root {
+      --bg: #0b0e1a;
+      --surface: #111427;
+      --surface2: #181c33;
+      --text: #e0e4ff;
+      --muted: #8892b0;
+      --accent: #6c5ce7;
+      --accent2: #00cec9;
+      --saffron: #f39c12;
+      --line: #232845;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 2px solid var(--line);
+    }
+    .header h1 {
+      font-size: 2.2rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    .header .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .nav {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+    .nav a {
+      padding: 8px 20px;
+      border-radius: 24px;
+      background: var(--surface2);
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border: 1px solid var(--line);
+      transition: all 0.2s;
+    }
+    .nav a:hover, .nav a.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    section {
+      margin-bottom: 48px;
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 32px;
+      border: 1px solid var(--line);
+    }
+    section h2 {
+      font-size: 1.5rem;
+      color: var(--accent2);
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    section h3 {
+      font-size: 1.1rem;
+      color: var(--saffron);
+      margin-top: 24px;
+      margin-bottom: 8px;
+    }
+    p { margin-bottom: 12px; color: var(--text); }
+    ul, ol { margin: 12px 0 12px 24px; }
+    li { margin-bottom: 8px; color: var(--text); }
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .highlight {
+      background: var(--surface2);
+      border-left: 3px solid var(--accent);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+      font-size: 0.92rem;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      border-radius: 24px;
+      background: var(--surface2);
+      color: var(--accent2);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      border: 1px solid var(--line);
+      margin-bottom: 32px;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      text-decoration: none;
+    }
+    .footer {
+      text-align: center;
+      padding-top: 32px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .made-in-india {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--saffron);
+      font-weight: 600;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.92rem;
+    }
+    th, td {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      text-align: left;
+    }
+    th {
+      background: var(--surface2);
+      color: var(--accent2);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="javascript:history.back()" class="back-btn">&larr; Back to VeriPass</a>
+
+    <div class="header">
+      <h1>VeriPass</h1>
+      <p class="subtitle">Privacy Policy, Terms &amp; Conditions</p>
+    </div>
+
+    <nav class="nav">
+      <a href="#privacy">Privacy Policy</a>
+      <a href="#terms">Terms of Service</a>
+      <a href="#conditions">Conditions</a>
+      <a href="#licensing">Licensing</a>
+      <a href="#contact">Contact</a>
+    </nav>
+
+    <!-- ===== PRIVACY POLICY ===== -->
+    <section id="privacy">
+      <h2>1. Privacy Policy</h2>
+      <p><em>Last updated: August 2026</em></p>
+      <p>VeriPass ("we", "our", "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use the VeriPass platform.</p>
+
+      <h3>1.1 Information We Collect</h3>
+      <ul>
+        <li><strong>Account Information:</strong> Username, email address (if provided), role (User/Producer/Logistics/Retailer), and passkey (hashed)</li>
+        <li><strong>Wallet Data:</strong> Algorand wallet address (derived from mnemonic, never stored), wallet session identifiers</li>
+        <li><strong>Product Data:</strong> QR codes scanned, product verification results, supply-chain checkpoints</li>
+        <li><strong>Payment Data:</strong> Algorand TestNet transaction IDs, amounts, timestamps (all on-chain and publicly verifiable)</li>
+        <li><strong>Usage Data:</strong> Number of verifications, AI agent queries, spending patterns</li>
+      </ul>
+
+      <h3>1.2 How We Use Your Information</h3>
+      <ul>
+        <li>To provide product verification and supply-chain passport services</li>
+        <li>To process x402 micropayments on Algorand TestNet</li>
+        <li>To authenticate your identity and secure your account</li>
+        <li>To power AI agent queries and generate verification reports</li>
+        <li>To improve platform performance and security</li>
+      </ul>
+
+      <h3>1.3 Data Storage &amp; Security</h3>
+      <div class="highlight">
+        <strong>Key Security Measures:</strong>
+        <ul>
+          <li>Mnemonics are sent over HTTPS once to derive wallet addresses, then immediately discarded — <strong>never stored</strong></li>
+          <li>Passkeys are stored using secure hashing (scrypt)</li>
+          <li>All API endpoints require authentication via HMAC-signed tokens</li>
+          <li>Payment data lives on Algorand TestNet (public blockchain) — we store only transaction references</li>
+        </ul>
+      </div>
+
+      <h3>1.4 Data Retention</h3>
+      <p>Your account data is retained as long as your account is active. Upon account termination (including wallet-based accounts), personal data is deleted. Blockchain transactions are permanent and public by nature of the Algorand network.</p>
+
+      <h3>1.5 Third-Party Services</h3>
+      <ul>
+        <li><strong>Google Gemini AI:</strong> Used for product verification and AI agent queries</li>
+        <li><strong>Algorand TestNet:</strong> Payment processing and transaction settlement</li>
+        <li><strong>Pera Wallet:</strong> Optional wallet connection for authentication and payments</li>
+        <li><strong>Google OAuth:</strong> Optional sign-in authentication</li>
+      </ul>
+
+      <h3>1.6 Your Rights</h3>
+      <ul>
+        <li>Access your account data at any time</li>
+        <li>Request account termination and data deletion</li>
+        <li>Export your payment history and verification records</li>
+        <li>Control your spending limits and notification preferences</li>
+      </ul>
+    </section>
+
+    <!-- ===== TERMS OF SERVICE ===== -->
+    <section id="terms">
+      <h2>2. Terms of Service</h2>
+      <p><em>Last updated: August 2026</em></p>
+      <p>By accessing or using VeriPass, you agree to these Terms of Service. If you do not agree, please do not use the platform.</p>
+
+      <h3>2.1 Description of Service</h3>
+      <p>VeriPass is an anti-counterfeit product-passport platform that uses:</p>
+      <ul>
+        <li><strong>x402 HTTP Payment Protocol</strong> for pay-per-use micropayments on Algorand TestNet</li>
+        <li><strong>AI-powered agents</strong> for product verification, market analysis, and supply-chain intelligence</li>
+        <li><strong>Blockchain-based payments</strong> using native Algorand ALGO transactions</li>
+      </ul>
+
+      <h3>2.2 Account Types</h3>
+      <table>
+        <tr>
+          <th>Role</th>
+          <th>Description</th>
+          <th>Access</th>
+        </tr>
+        <tr>
+          <td>User</td>
+          <td>End consumer verifying products</td>
+          <td>Scan, verify, AI chat, wallet</td>
+        </tr>
+        <tr>
+          <td>Producer</td>
+          <td>Manufacturer creating supply-chain checkpoints</td>
+          <td>User features + digital signatures</td>
+        </tr>
+        <tr>
+          <td>Logistics</td>
+          <td>Shipping/transport provider</td>
+          <td>User features + digital signatures</td>
+        </tr>
+        <tr>
+          <td>Retailer</td>
+          <td>Store/seller verifying received goods</td>
+          <td>User features + digital signatures</td>
+        </tr>
+      </table>
+
+      <h3>2.3 Payment Terms</h3>
+      <ul>
+        <li>All payments are in <strong>Algorand TestNet ALGO</strong> (not real currency)</li>
+        <li>Per-verification fee: <strong>0.002 ALGO</strong> (~₹0.14 at TestNet rates)</li>
+        <li>AI agent queries: <strong>0.003–0.005 ALGO</strong> per query</li>
+        <li>Payments are direct wallet-to-wallet transfers — no intermediaries</li>
+        <li>Users can set spending limits via the Wallet screen</li>
+        <li>All transactions are publicly verifiable on <a href="https://lora.algokit.io/testnet" target="_blank">Lora Explorer</a></li>
+      </ul>
+
+      <h3>2.4 User Responsibilities</h3>
+      <ul>
+        <li>Maintain the security of your passkey and wallet mnemonic</li>
+        <li>Do not share your account credentials with others</li>
+        <li>Use the platform only for lawful purposes</li>
+        <li>Understand that product verification results are informational — always exercise independent judgment</li>
+      </ul>
+
+      <h3>2.5 Prohibited Activities</h3>
+      <ul>
+        <li>Attempting to circumvent x402 payment requirements</li>
+        <li>Uploading malicious QR codes or product data</li>
+        <li>Using the platform to facilitate counterfeit product distribution</li>
+        <li>Automated scraping or abuse of AI agent endpoints</li>
+      </ul>
+    </section>
+
+    <!-- ===== CONDITIONS ===== -->
+    <section id="conditions">
+      <h2>3. Conditions</h2>
+
+      <h3>3.1 Disclaimer of Warranties</h3>
+      <div class="highlight">
+        VeriPass is provided "as is" and "as available" without warranties of any kind. We do not guarantee that verification results are 100% accurate. Product verification is an additional layer of trust — not a substitute for standard due diligence.
+      </div>
+
+      <h3>3.2 Limitation of Liability</h3>
+      <p>In no event shall VeriPass, Cyber Assassins, or Bangalore Institute of Engineering be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the platform.</p>
+
+      <h3>3.3 Blockchain Risks</h3>
+      <ul>
+        <li>Algorand TestNet transactions are irreversible</li>
+        <li>Wallet mnemonic loss results in permanent loss of associated funds and account</li>
+        <li>Network congestion may delay transaction confirmation</li>
+        <li>TestNet ALGO has no real monetary value</li>
+      </ul>
+
+      <h3>3.4 Modifications</h3>
+      <p>We reserve the right to modify these terms at any time. Continued use of the platform after changes constitutes acceptance of the modified terms.</p>
+
+      <h3>3.5 Termination</h3>
+      <p>You may terminate your account at any time via the Account screen. Wallet-based accounts can be terminated with full data deletion. We reserve the right to terminate accounts that violate these terms.</p>
+    </section>
+
+    <!-- ===== LICENSING & OPEN SOURCE ===== -->
+    <section id="licensing">
+      <h2>4. Licensing &amp; Open Source</h2>
+
+      <h3>4.1 Project License</h3>
+      <p>VeriPass is released under the <strong>MIT License</strong>.</p>
+      <div class="highlight">
+        Copyright (c) 2026 Cyber Assassins — Bangalore Institute of Engineering<br><br>
+        Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
+      </div>
+
+      <h3>4.2 Open-Source Dependencies</h3>
+      <table>
+        <tr>
+          <th>Package</th>
+          <th>License</th>
+          <th>Purpose</th>
+        </tr>
+        <tr>
+          <td>Hono</td>
+          <td>MIT</td>
+          <td>HTTP framework</td>
+        </tr>
+        <tr>
+          <td>React</td>
+          <td>MIT</td>
+          <td>Frontend UI</td>
+        </tr>
+        <tr>
+          <td>algosdk</td>
+          <td>MIT</td>
+          <td>Algorand SDK</td>
+        </tr>
+        <tr>
+          <td>x402</td>
+          <td>MIT</td>
+          <td>x402 payment protocol</td>
+        </tr>
+        <tr>
+          <td>@perawallet/connect</td>
+          <td>MIT</td>
+          <td>Pera Wallet integration</td>
+        </tr>
+        <tr>
+          <td>@google/genai</td>
+          <td>Apache-2.0</td>
+          <td>Gemini AI integration</td>
+        </tr>
+        <tr>
+          <td>Vite</td>
+          <td>MIT</td>
+          <td>Build tool</td>
+        </tr>
+        <tr>
+          <td>Tailwind CSS</td>
+          <td>MIT</td>
+          <td>Styling</td>
+        </tr>
+      </table>
+
+      <h3>4.3 Source Code</h3>
+      <p>The complete source code is available on GitHub:</p>
+      <p><a href="https://github.com/ADITYA02NM/VeriPass" target="_blank">github.com/ADITYA02NM/VeriPass</a></p>
+      <p>We welcome contributions, bug reports, and feature requests via GitHub Issues and Pull Requests.</p>
+    </section>
+
+    <!-- ===== CONTACT ===== -->
+    <section id="contact">
+      <h2>5. Contact</h2>
+      <p>For questions about these policies or the VeriPass platform:</p>
+      <ul>
+        <li><strong>GitHub:</strong> <a href="https://github.com/ADITYA02NM/VeriPass/issues" target="_blank">github.com/ADITYA02NM/VeriPass/issues</a></li>
+        <li><strong>Team:</strong> Cyber Assassins — Bangalore Institute of Engineering</li>
+        <li><strong>Members:</strong> Rakshhith S, Aditya Gowda, Shreeraksha H S</li>
+      </ul>
+    </section>
+
+    <div class="footer">
+      <p class="made-in-india">🇮🇳 Made in India</p>
+      <p style="margin-top:8px;">VeriPass &copy; 2026 Cyber Assassins — Bangalore Institute of Engineering</p>
+      <p style="margin-top:4px;"><a href="https://github.com/ADITYA02NM/VeriPass" target="_blank">View on GitHub</a></p>
+    </div>
+  </div>
+</body>
+</html>

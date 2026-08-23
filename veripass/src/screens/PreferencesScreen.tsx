@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { ScreenType } from '../types';
 import { TopAppBar } from '../components/TopAppBar';
+import { UserInfo } from '../lib/api';
 
 interface PreferencesScreenProps {
   onNavigate: (screen: ScreenType, transition?: 'push' | 'push_back' | 'none') => void;
+  user: UserInfo | null;
 }
 
-export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onNavigate }) => {
-  const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'hi' | 'de'>('en');
+export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onNavigate, user }) => {
+  const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'hi' | 'kn'>(() => {
+    const saved = localStorage.getItem('veripass_lang');
+    return (saved as 'en' | 'hi' | 'kn') || 'en';
+  });
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.localStorage.getItem('veripass_theme') === 'dark';
@@ -18,17 +23,30 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onNavigate
   const [securityTips, setSecurityTips] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const handleLanguageChange = (lang: 'en' | 'hi' | 'kn') => {
+    setSelectedLanguage(lang);
+    localStorage.setItem('veripass_lang', lang);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
+  };
+
   const handleSave = () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
+
+  const languages: { value: 'en' | 'hi' | 'kn'; label: string; native: string }[] = [
+    { value: 'en', label: 'English', native: 'English' },
+    { value: 'hi', label: 'Hindi', native: 'हिन्दी' },
+    { value: 'kn', label: 'Kannada', native: 'ಕನ್ನಡ' },
+  ];
 
   return (
     <div className="bg-[var(--vp-surface)] text-[var(--vp-on-surface)] font-['Inter'] min-h-screen pb-28 pt-16 flex flex-col">
       <TopAppBar currentScreen="preferences" onNavigate={onNavigate} />
 
       <main className="max-w-6xl mx-auto w-full px-4 md:px-8 py-6">
-        {/* Header Section: div[1] with back button: body/main[1]/div[1]/button[1] */}
+        {/* Header */}
         <div className="mb-8 flex items-center gap-4 border-b-2 border-[var(--vp-ink)] pb-4">
           <button
             type="button"
@@ -46,7 +64,7 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onNavigate
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Main Content Column */}
           <div className="lg:col-span-8 space-y-6">
-            {/* Theme Settings Section */}
+            {/* Theme Settings */}
             <section className="bg-[var(--vp-white)] border-2 border-[var(--vp-ink)] voxel-shadow p-5 sm:p-6">
               <h2 className="text-xl font-bold text-[var(--vp-ink-text)] mb-4 flex items-center gap-2 border-b-2 border-[var(--vp-ink)] pb-2">
                 <span className="material-symbols-outlined text-2xl">palette</span>
@@ -59,7 +77,6 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onNavigate
                     ENABLE HIGH-CONTRAST TERMINAL THEME
                   </p>
                 </div>
-                {/* Toggle Button */}
                 <button
                   type="button"
                   onClick={() => {
@@ -81,68 +98,36 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onNavigate
               </div>
             </section>
 
-            {/* Language Section */}
+            {/* Language Section — Kannada replaces German */}
             <section className="bg-[var(--vp-white)] border-2 border-[var(--vp-ink)] voxel-shadow p-5 sm:p-6">
               <h2 className="text-xl font-bold text-[var(--vp-ink-text)] mb-4 flex items-center gap-2 border-b-2 border-[var(--vp-ink)] pb-2">
                 <span className="material-symbols-outlined text-2xl">language</span>
                 SYSTEM LANGUAGE
               </h2>
               <div className="space-y-3">
-                {/* English */}
-                <div
-                  onClick={() => setSelectedLanguage('en')}
-                  className={`flex items-center p-4 bg-[var(--vp-container-low)] border-2 border-[var(--vp-ink)] cursor-pointer hover:bg-[var(--vp-container-high)] transition-colors ${
-                    selectedLanguage === 'en' ? 'border-[var(--vp-ink)]' : ''
-                  }`}
-                >
-                  <div className="w-5 h-5 bg-[var(--vp-white)] border-2 border-[var(--vp-ink)] flex items-center justify-center">
-                    {selectedLanguage === 'en' && <div className="w-2.5 h-2.5 bg-[var(--vp-ink)]" />}
-                  </div>
-                  <div className="ml-4 flex-grow flex justify-between items-center">
-                    <span className="text-[16px] font-bold text-[var(--vp-on-surface)]">English (US)</span>
-                    {selectedLanguage === 'en' && (
-                      <span className="font-pixel text-[14px] text-[var(--vp-ink-text)] bg-[var(--vp-primary-fixed)] px-2 py-0.5 border border-[var(--vp-ink)] font-bold">
-                        ACTIVE
+                {languages.map((lang) => (
+                  <div
+                    key={lang.value}
+                    onClick={() => handleLanguageChange(lang.value)}
+                    className={`flex items-center p-4 bg-[var(--vp-container-low)] border-2 border-[var(--vp-ink)] cursor-pointer hover:bg-[var(--vp-container-high)] transition-colors ${
+                      selectedLanguage === lang.value ? 'border-[var(--vp-ink)]' : ''
+                    }`}
+                  >
+                    <div className="w-5 h-5 bg-[var(--vp-white)] border-2 border-[var(--vp-ink)] flex items-center justify-center">
+                      {selectedLanguage === lang.value && <div className="w-2.5 h-2.5 bg-[var(--vp-ink)]" />}
+                    </div>
+                    <div className="ml-4 flex-grow flex justify-between items-center">
+                      <span className="text-[16px] font-bold text-[var(--vp-on-surface)]">
+                        {lang.label} ({lang.native})
                       </span>
-                    )}
+                      {selectedLanguage === lang.value && (
+                        <span className="font-pixel text-[14px] text-[var(--vp-ink-text)] bg-[var(--vp-primary-fixed)] px-2 py-0.5 border border-[var(--vp-ink)] font-bold">
+                          ACTIVE
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-
-                {/* Hindi */}
-                <div
-                  onClick={() => setSelectedLanguage('hi')}
-                  className="flex items-center p-4 bg-[var(--vp-container-low)] border-2 border-[var(--vp-ink)] cursor-pointer hover:bg-[var(--vp-container-high)] transition-colors"
-                >
-                  <div className="w-5 h-5 bg-[var(--vp-white)] border-2 border-[var(--vp-ink)] flex items-center justify-center">
-                    {selectedLanguage === 'hi' && <div className="w-2.5 h-2.5 bg-[var(--vp-ink)]" />}
-                  </div>
-                  <div className="ml-4 flex-grow flex justify-between items-center">
-                    <span className="text-[16px] font-bold text-[var(--vp-on-surface)]">Hindi (India)</span>
-                    {selectedLanguage === 'hi' && (
-                      <span className="font-pixel text-[14px] text-[var(--vp-ink-text)] bg-[var(--vp-primary-fixed)] px-2 py-0.5 border border-[var(--vp-ink)] font-bold">
-                        ACTIVE
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* German */}
-                <div
-                  onClick={() => setSelectedLanguage('de')}
-                  className="flex items-center p-4 bg-[var(--vp-container-low)] border-2 border-[var(--vp-ink)] cursor-pointer hover:bg-[var(--vp-container-high)] transition-colors"
-                >
-                  <div className="w-5 h-5 bg-[var(--vp-white)] border-2 border-[var(--vp-ink)] flex items-center justify-center">
-                    {selectedLanguage === 'de' && <div className="w-2.5 h-2.5 bg-[var(--vp-ink)]" />}
-                  </div>
-                  <div className="ml-4 flex-grow flex justify-between items-center">
-                    <span className="text-[16px] font-bold text-[var(--vp-on-surface)]">German (DE)</span>
-                    {selectedLanguage === 'de' && (
-                      <span className="font-pixel text-[14px] text-[var(--vp-ink-text)] bg-[var(--vp-primary-fixed)] px-2 py-0.5 border border-[var(--vp-ink)] font-bold">
-                        ACTIVE
-                      </span>
-                    )}
-                  </div>
-                </div>
+                ))}
               </div>
             </section>
 
@@ -157,9 +142,7 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onNavigate
                 <div className="flex items-center justify-between p-4 bg-[var(--vp-container-low)] border-2 border-[var(--vp-ink)]">
                   <div>
                     <p className="text-[16px] font-bold text-[var(--vp-on-surface)] flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[var(--vp-magenta-text)] text-lg">
-                        warning
-                      </span>
+                      <span className="material-symbols-outlined text-[var(--vp-magenta-text)] text-lg">warning</span>
                       System Alerts
                     </p>
                     <p className="font-pixel text-[13px] text-[var(--vp-muted)] mt-0.5">
@@ -175,9 +158,7 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onNavigate
                 <div className="flex items-center justify-between p-4 bg-[var(--vp-container-low)] border-2 border-[var(--vp-ink)]">
                   <div>
                     <p className="text-[16px] font-bold text-[var(--vp-on-surface)] flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[var(--vp-green-text)] text-lg">
-                        verified
-                      </span>
+                      <span className="material-symbols-outlined text-[var(--vp-green-text)] text-lg">verified</span>
                       Verification Updates
                     </p>
                     <p className="font-pixel text-[13px] text-[var(--vp-muted)] mt-0.5">
@@ -191,11 +172,7 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onNavigate
                       verifUpdates ? 'bg-[var(--vp-green)]' : 'bg-[var(--vp-container-highest)]'
                     }`}
                   >
-                    <div
-                      className={`w-5 h-5 bg-[var(--vp-white)] border-2 border-[var(--vp-ink)] absolute top-0 transition-all ${
-                        verifUpdates ? 'right-0' : 'left-0'
-                      }`}
-                    />
+                    <div className={`w-5 h-5 bg-[var(--vp-white)] border-2 border-[var(--vp-ink)] absolute top-0 transition-all ${verifUpdates ? 'right-0' : 'left-0'}`} />
                   </button>
                 </div>
 
@@ -203,9 +180,7 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onNavigate
                 <div className="flex items-center justify-between p-4 bg-[var(--vp-container-low)] border-2 border-[var(--vp-ink)]">
                   <div>
                     <p className="text-[16px] font-bold text-[var(--vp-on-surface)] flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[var(--vp-cyan)] text-lg">
-                        lightbulb
-                      </span>
+                      <span className="material-symbols-outlined text-[var(--vp-cyan)] text-lg">lightbulb</span>
                       Security Tips
                     </p>
                     <p className="font-pixel text-[13px] text-[var(--vp-muted)] mt-0.5">
@@ -219,11 +194,7 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onNavigate
                       securityTips ? 'bg-[var(--vp-green)]' : 'bg-[var(--vp-container-highest)]'
                     }`}
                   >
-                    <div
-                      className={`w-5 h-5 bg-[var(--vp-white)] border-2 border-[var(--vp-ink)] absolute top-0 transition-all ${
-                        securityTips ? 'right-0' : 'left-0'
-                      }`}
-                    />
+                    <div className={`w-5 h-5 bg-[var(--vp-white)] border-2 border-[var(--vp-ink)] absolute top-0 transition-all ${securityTips ? 'right-0' : 'left-0'}`} />
                   </button>
                 </div>
               </div>
@@ -244,26 +215,23 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onNavigate
 
           {/* Side Column */}
           <div className="lg:col-span-4 space-y-6">
-            {/* Data Privacy Card */}
+            {/* Privacy & Legal Card */}
             <div className="bg-[var(--vp-cream)] border-2 border-[var(--vp-ink)] voxel-shadow p-5 sm:p-6 relative overflow-hidden">
               <div className="absolute -right-4 -top-4 opacity-10 pointer-events-none">
                 <span className="material-symbols-outlined text-[100px]">policy</span>
               </div>
               <h3 className="text-xl font-bold text-[var(--vp-ink-text)] mb-3 relative z-10 flex items-center gap-2">
                 <span className="material-symbols-outlined text-2xl">shield</span>
-                DATA PRIVACY
+                PRIVACY & LEGAL
               </h3>
               <p className="text-[15px] text-[var(--vp-on-surface)] mb-5 relative z-10">
-                Review how VeriPass handles your verifiable credentials, telemetry, and encrypted vaults.
+                Review how VeriPass handles your data, credentials, and payment information.
               </p>
               <a
-                href="#privacy"
-                onClick={(e) => {
-                  e.preventDefault();
-                }}
+                href="/PTC.html"
                 className="inline-flex items-center gap-1 text-[var(--vp-ink-text)] font-pixel text-[17px] uppercase border-b-2 border-[var(--vp-ink)] pb-0.5 hover:text-[var(--vp-saffron-text)] hover:border-[var(--vp-saffron)] transition-colors"
               >
-                READ PRIVACY POLICY
+                TERMS & PRIVACY POLICY
                 <span className="material-symbols-outlined text-base">arrow_forward</span>
               </a>
             </div>
@@ -275,13 +243,13 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onNavigate
               </h3>
               <ul className="font-pixel text-[15px] text-[var(--vp-outline-variant)] space-y-2">
                 <li className="flex justify-between">
-                  <span>APP_VERSION:</span> <span className="text-[var(--vp-white-text)]">v2.4.1-STABLE</span>
+                  <span>VERSION:</span> <span className="text-[var(--vp-white-text)]">v2.0.0</span>
                 </li>
                 <li className="flex justify-between">
-                  <span>LAST_SYNC:</span> <span className="text-[var(--vp-white-text)]">2023-10-27T14:32Z</span>
+                  <span>BUILD:</span> <span className="text-[var(--vp-white-text)]">STABLE</span>
                 </li>
                 <li className="flex justify-between">
-                  <span>CLIENT_ID:</span> <span className="text-[var(--vp-white-text)]">VX-8922</span>
+                  <span>IDENTIFIER:</span> <span className="text-[var(--vp-white-text)]">{user?.identifier || '---'}</span>
                 </li>
               </ul>
             </div>
@@ -289,51 +257,22 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({ onNavigate
         </div>
       </main>
 
-      {/* Nav with <div> matching exact xpath: body/nav[1]/div[1], div[2], div[3] */}
+      {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-[var(--vp-cream)] border-t-4 border-[var(--vp-ink)] shadow-[0px_-4px_0px_0px_rgba(1,7,102,1)] md:hidden">
-        {/* div[1] -> Scan */}
-        <div
-          onClick={() => onNavigate('scan', 'none')}
-          className="flex flex-col items-center justify-center text-[var(--vp-muted)] p-1 hover:bg-[var(--vp-container)] active:scale-95 transition-transform w-16 cursor-pointer"
-          role="button"
-          tabIndex={0}
-        >
+        <div onClick={() => onNavigate('scan', 'none')} className="flex flex-col items-center justify-center text-[var(--vp-muted)] p-1 hover:bg-[var(--vp-container)] active:scale-95 transition-transform w-16 cursor-pointer" role="button" tabIndex={0}>
           <span className="material-symbols-outlined text-2xl">qr_code_scanner</span>
           <span className="font-pixel text-[13px] uppercase mt-1">Scan</span>
         </div>
-
-        {/* div[2] -> Inventory / Vault */}
-        <div
-          onClick={() => onNavigate('inventory', 'none')}
-          className="flex flex-col items-center justify-center text-[var(--vp-muted)] p-1 hover:bg-[var(--vp-container)] active:scale-95 transition-transform w-16 cursor-pointer"
-          role="button"
-          tabIndex={0}
-        >
+        <div onClick={() => onNavigate('inventory', 'none')} className="flex flex-col items-center justify-center text-[var(--vp-muted)] p-1 hover:bg-[var(--vp-container)] active:scale-95 transition-transform w-16 cursor-pointer" role="button" tabIndex={0}>
           <span className="material-symbols-outlined text-2xl">inventory_2</span>
           <span className="font-pixel text-[13px] uppercase mt-1">Vault</span>
         </div>
-
-        {/* div[3] -> History */}
-        <div
-          onClick={() => onNavigate('history', 'none')}
-          className="flex flex-col items-center justify-center text-[var(--vp-muted)] p-1 hover:bg-[var(--vp-container)] active:scale-95 transition-transform w-16 cursor-pointer"
-          role="button"
-          tabIndex={0}
-        >
+        <div onClick={() => onNavigate('history', 'none')} className="flex flex-col items-center justify-center text-[var(--vp-muted)] p-1 hover:bg-[var(--vp-container)] active:scale-95 transition-transform w-16 cursor-pointer" role="button" tabIndex={0}>
           <span className="material-symbols-outlined text-2xl">history</span>
           <span className="font-pixel text-[13px] uppercase mt-1">History</span>
         </div>
-
-        {/* div[4] -> Profile (Active) */}
-        <div
-          onClick={() => onNavigate('account', 'none')}
-          className="flex flex-col items-center justify-center bg-[var(--vp-saffron)] text-[var(--vp-black-text)] border-2 border-[var(--vp-ink)] p-1 active:scale-95 transition-transform w-16 font-bold voxel-shadow-sm cursor-pointer"
-          role="button"
-          tabIndex={0}
-        >
-          <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-            account_circle
-          </span>
+        <div onClick={() => onNavigate('account', 'none')} className="flex flex-col items-center justify-center bg-[var(--vp-saffron)] text-[var(--vp-black-text)] border-2 border-[var(--vp-ink)] p-1 active:scale-95 transition-transform w-16 font-bold voxel-shadow-sm cursor-pointer" role="button" tabIndex={0}>
+          <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>account_circle</span>
           <span className="font-pixel text-[13px] uppercase mt-1">Profile</span>
         </div>
       </nav>

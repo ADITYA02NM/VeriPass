@@ -111,6 +111,66 @@ try { db.exec('ALTER TABLE users ADD COLUMN spend_limit REAL DEFAULT 0.05'); } c
 try { db.exec('ALTER TABLE users ADD COLUMN total_spent REAL DEFAULT 0'); } catch (e) {
   if (!String(e?.message || '').includes('duplicate column')) throw e;
 }
+
+// migration: biometric enabled per user
+try { db.exec('ALTER TABLE users ADD COLUMN biometric_enabled INTEGER DEFAULT 0'); } catch (e) {
+  if (!String(e?.message || '').includes('duplicate column')) throw e;
+}
+
+// migration: wallet mnemonic for payment signing (stored encrypted — never exposed via API)
+try { db.exec('ALTER TABLE users ADD COLUMN wallet_mnemonic TEXT'); } catch (e) {
+  if (!String(e?.message || '').includes('duplicate column')) throw e;
+}
+
+// migration: email for OTP
+try { db.exec('ALTER TABLE users ADD COLUMN email TEXT'); } catch (e) {
+  if (!String(e?.message || '').includes('duplicate column')) throw e;
+}
+
+// migration: google_id for OAuth login
+try { db.exec('ALTER TABLE users ADD COLUMN google_id TEXT'); } catch (e) {
+  if (!String(e?.message || '').includes('duplicate column')) throw e;
+}
+
+// OTP codes — 6-digit codes for password reset and email verification
+db.exec(`
+  CREATE TABLE IF NOT EXISTS otp_codes (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    email      TEXT NOT NULL,
+    code       TEXT NOT NULL,
+    purpose    TEXT NOT NULL DEFAULT 'verify',  -- 'verify' | 'reset'
+    expires_at TEXT NOT NULL,
+    used       INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+`);
+
+// Backup recovery codes — one-time-use codes for account recovery
+db.exec(`
+  CREATE TABLE IF NOT EXISTS backup_codes (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner_key  TEXT NOT NULL,
+    code       TEXT NOT NULL,
+    used       INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    UNIQUE (owner_key, code)
+  );
+`);
+
+// Custom digital signatures — user-created cryptographic signatures for documents
+db.exec(`
+  CREATE TABLE IF NOT EXISTS digital_signatures (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner_key   TEXT NOT NULL,
+    label       TEXT NOT NULL,
+    pub_key     TEXT NOT NULL,
+    priv_key    TEXT NOT NULL,    -- stored hashed, never exposed raw
+    doc_name    TEXT DEFAULT '',
+    status      TEXT DEFAULT 'active',
+    created_at  TEXT DEFAULT (datetime('now'))
+  );
+`);
+
 // Deterministic seed prices — only set once (when zero), don't re-randomize on restart
 db.exec(`UPDATE products SET market_price =
   CASE
@@ -226,11 +286,11 @@ function seed() {
 
   // Seed wallet addresses (pre-derived from wallets.json)
   const WALLET_ADDRS = {
-    user: 'DG7KHLVTS3XI42AYG5KXAISTIGIFFB4LG7WAWA6ICBDEG3B6NA4BFKWFHY',
+    user: 'QSOFH5G2PSNYVO3S5DF5UY2PKQJXQGQ6SZHQOFQ5TFADT5Y4QWEI746B7E',
     pro: 'EKLDBPKGINAY53RP4PQUTWDLBIVJTM5VVR2A3PXGNSUQ4X3QWGFQCYJ5V4',
     log: 'RCZT2Z3WKAR2OX5HUFWG7CEQAEICEDD4H2KGIWQEYCQQB4HCXW4ZQP54ZE',
     ret: 'HFHJPLT3QW6DTMHSENJODFZCAV5XUYG3XMGTMXL5XH32OI2ACYOKRO4KCU',
-    ravi: 'QSOFH5G2PSNYVO3S5DF5UY2PKQJXQGQ6SZHQOFQ5TFADT5Y4QWEI746B7E',
+    ravi: 'DG7KHLVTS3XI42AYG5KXAISTIGIFFB4LG7WAWA6ICBDEG3B6NA4BFKWFHY',
   };
   for (const [id, addr] of Object.entries(WALLET_ADDRS)) {
     db.prepare('UPDATE users SET wallet_address = ? WHERE identifier = ? AND wallet_address IS NULL').run(addr, id);

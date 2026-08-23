@@ -263,3 +263,107 @@ export function setSpendingLimit(limit: number) {
     body: JSON.stringify({ limit }),
   });
 }
+
+// ── OTP ──
+export function sendOtp(email: string, purpose: string = 'verify') {
+  return apiFetch<{ ok: boolean; devCode?: string }>('/api/auth/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email, purpose }),
+  });
+}
+
+export function verifyOtp(email: string, code: string, purpose: string = 'verify') {
+  return apiFetch<{ ok: boolean }>('/api/auth/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email, code, purpose }),
+  });
+}
+
+// ── Backup Codes ──
+export interface BackupCode {
+  code: string;
+  used: boolean;
+}
+
+export function generateBackupCodes() {
+  return apiFetch<{ ok: boolean; codes: BackupCode[] }>('/api/auth/backup-codes/generate', {
+    method: 'POST',
+  });
+}
+
+export function getBackupCodes() {
+  return apiFetch<{ codes: BackupCode[] }>('/api/auth/backup-codes');
+}
+
+export function useBackupCode(identifier: string, code: string) {
+  return apiFetch<{ ok: boolean }>('/api/auth/backup-codes/use', {
+    method: 'POST',
+    body: JSON.stringify({ identifier, code }),
+  });
+}
+
+// ── Password Reset ──
+export function resetPassword(email: string, code: string, newPassword: string) {
+  return apiFetch<{ ok: boolean }>('/api/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ email, code, newPassword }),
+  });
+}
+
+// ── Google Auth ──
+export function loginWithGoogle(idToken: string) {
+  return apiFetch<{ token: string; user: UserInfo }>('/api/auth/google', {
+    method: 'POST',
+    body: JSON.stringify({ idToken }),
+  });
+}
+
+// ── Wallet Linking ──
+export function linkWallet(mnemonic: string) {
+  return apiFetch<{ ok: boolean; walletAddress: string }>('/api/auth/link-wallet', {
+    method: 'POST',
+    body: JSON.stringify({ mnemonic }),
+  });
+}
+
+// ── Digital Signatures ──
+export interface DigitalSignature {
+  id: number;
+  label: string;
+  pub_key: string;
+  doc_name: string | null;
+  status: string;
+  created_at: string;
+}
+
+export function getSignatures() {
+  return apiFetch<{ signatures: DigitalSignature[] }>('/api/signatures');
+}
+
+export function createSignature(label: string, docName?: string) {
+  return apiFetch<{ ok: boolean; signature: DigitalSignature }>('/api/signatures/create', {
+    method: 'POST',
+    body: JSON.stringify({ label, docName }),
+  });
+}
+
+export function signData(signatureId: number, data: string) {
+  return apiFetch<{ ok: boolean; signature: string; signedBy: string }>('/api/signatures/sign', {
+    method: 'POST',
+    body: JSON.stringify({ signatureId, data }),
+  });
+}
+
+export function revokeSignature(signatureId: number) {
+  return apiFetch<{ ok: boolean }>('/api/signatures/revoke', {
+    method: 'POST',
+    body: JSON.stringify({ signatureId }),
+  });
+}
+
+// ── Biometric ──
+export function toggleBiometric() {
+  return apiFetch<{ ok: boolean; biometricEnabled: boolean }>('/api/biometric/toggle', {
+    method: 'POST',
+  });
+}

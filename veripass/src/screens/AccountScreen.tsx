@@ -1,29 +1,37 @@
 import React from 'react';
 import { ScreenType, UserRole } from '../types';
 import { TopAppBar } from '../components/TopAppBar';
-import { terminateSession, clearSession } from '../lib/api';
+import { terminateSession, clearSession, UserInfo } from '../lib/api';
 import { clearScanHistory } from './HistoryScreen';
 
 interface AccountScreenProps {
   onNavigate: (screen: ScreenType, transition?: 'push' | 'push_back' | 'none') => void;
   userRole: UserRole;
+  user: UserInfo | null;
+  onLogout: () => void;
 }
 
-export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate, userRole }) => {
+export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate, userRole, user, onLogout }) => {
   const [terminating, setTerminating] = React.useState(false);
 
   const handleTerminate = async () => {
-    if (!window.confirm('Terminate session?\n\nResets your free scan tokens back to 3 and wipes your vault bookmarks.')) return;
+    if (!window.confirm('Terminate session?\n\nThis will log you out and clear local data.')) return;
     setTerminating(true);
     try {
       await terminateSession();
     } catch {
-      // even if the API call fails, log out locally so the user is never stuck
+      // even if the API call fails, log out locally
     }
     clearSession();
     clearScanHistory();
-    onNavigate('login', 'push_back');
+    onLogout();
   };
+
+  const displayName = user?.name || user?.identifier || 'Anonymous';
+  const identifier = user?.identifier || '---';
+  const role = userRole;
+  const origin = user?.origin || 'N/A';
+
   return (
     <div className="bg-[var(--vp-cream)] text-[var(--vp-on-surface)] font-['Inter'] min-h-screen flex flex-col pt-16 pb-24">
       <TopAppBar currentScreen="account" onNavigate={onNavigate} />
@@ -47,36 +55,28 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate, userRo
             {/* Identity Info */}
             <div className="flex-grow text-center sm:text-left">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--vp-ink-text)] mb-1">
-                Rajiv Sharma
+                {displayName}
               </h2>
               <p className="font-pixel text-[18px] text-[var(--vp-muted)] mb-3 uppercase tracking-widest font-bold">
-                {userRole.toUpperCase()}
+                {role.toUpperCase()}
               </p>
               <div className="flex flex-wrap gap-2 justify-center sm:justify-start font-pixel text-[16px]">
                 <div className="border-2 border-[var(--vp-ink)] px-3 py-1 bg-[var(--vp-container-low)] text-[var(--vp-ink-text)]">
-                  <span className="text-[var(--vp-outline)]">ID:</span> VRP-992-8A4
+                  <span className="text-[var(--vp-outline)]">ID:</span> {identifier}
                 </div>
-                <div className="border-2 border-[var(--vp-ink)] px-3 py-1 bg-[var(--vp-container-low)] text-[var(--vp-ink-text)]">
-                  <span className="text-[var(--vp-outline)]">JOIN:</span> 2023-11-04
-                </div>
+                {origin && origin !== 'N/A' && (
+                  <div className="border-2 border-[var(--vp-ink)] px-3 py-1 bg-[var(--vp-container-low)] text-[var(--vp-ink-text)]">
+                    <span className="text-[var(--vp-outline)]">ORIGIN:</span> {origin}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-
-          {/* Origin Badge */}
-          <div className="absolute top-4 right-4 flex items-center border-2 border-[var(--vp-ink)] bg-[var(--vp-surface)] voxel-shadow-sm">
-            <div className="h-full w-2 bg-[var(--vp-saffron)] self-stretch" />
-            <div className="h-full w-2 bg-[var(--vp-white)] self-stretch" />
-            <div className="h-full w-2 bg-[var(--vp-green)] self-stretch mr-1.5" />
-            <span className="font-pixel text-[14px] text-[var(--vp-ink-text)] uppercase px-2 py-1 font-bold">
-              Origin: IND
-            </span>
           </div>
         </section>
 
         {/* Section 2: Configuration Options */}
         <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          {/* Button 1: Profile Security (body/main[1]/section[2]/button[1]) */}
+          {/* Profile Security */}
           <button
             type="button"
             onClick={() => onNavigate('profile-security', 'push')}
@@ -89,7 +89,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate, userRo
               <div>
                 <h3 className="text-lg font-bold text-[var(--vp-ink-text)]">Profile Security</h3>
                 <p className="font-pixel text-[15px] text-[var(--vp-muted)] mt-0.5">
-                  Biometrics, Passkeys, 2FA
+                  Biometrics, Passkeys, OTP
                 </p>
               </div>
             </div>
@@ -98,7 +98,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate, userRo
             </span>
           </button>
 
-          {/* Button 2: App Preferences (body/main[1]/section[2]/button[2]) */}
+          {/* App Preferences */}
           <button
             type="button"
             onClick={() => onNavigate('preferences', 'push')}
@@ -120,29 +120,31 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate, userRo
             </span>
           </button>
 
-          {/* Button 3: Digital Signature Settings (body/main[1]/section[2]/button[3]) */}
-          <button
-            type="button"
-            onClick={() => onNavigate('digital-signatures', 'push')}
-            className="border-2 border-[var(--vp-ink)] bg-[var(--vp-surface)] p-5 voxel-shadow hover:bg-[var(--vp-container)] voxel-btn-active text-left flex items-center justify-between group sm:col-span-2 cursor-pointer transition-all"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-11 h-11 bg-[var(--vp-ink)] text-[var(--vp-cream-text)] flex items-center justify-center group-hover:bg-[var(--vp-saffron)] group-hover:text-[var(--vp-black-text)] transition-colors">
-                <span className="material-symbols-outlined text-2xl">fingerprint</span>
+          {/* Digital Signature Settings — hidden for User role */}
+          {role !== 'User' && (
+            <button
+              type="button"
+              onClick={() => onNavigate('digital-signatures', 'push')}
+              className="border-2 border-[var(--vp-ink)] bg-[var(--vp-surface)] p-5 voxel-shadow hover:bg-[var(--vp-container)] voxel-btn-active text-left flex items-center justify-between group sm:col-span-2 cursor-pointer transition-all"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 bg-[var(--vp-ink)] text-[var(--vp-cream-text)] flex items-center justify-center group-hover:bg-[var(--vp-saffron)] group-hover:text-[var(--vp-black-text)] transition-colors">
+                  <span className="material-symbols-outlined text-2xl">fingerprint</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[var(--vp-ink-text)]">
+                    Digital Signature Settings
+                  </h3>
+                  <p className="font-pixel text-[15px] text-[var(--vp-muted)] mt-0.5">
+                    Manage Keys, Create Custom Signatures
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-[var(--vp-ink-text)]">
-                  Digital Signature Settings
-                </h3>
-                <p className="font-pixel text-[15px] text-[var(--vp-muted)] mt-0.5">
-                  Manage Keys, Revocation Certificates
-                </p>
-              </div>
-            </div>
-            <span className="material-symbols-outlined text-[var(--vp-ink-text)] group-hover:translate-x-1 transition-transform">
-              arrow_forward
-            </span>
-          </button>
+              <span className="material-symbols-outlined text-[var(--vp-ink-text)] group-hover:translate-x-1 transition-transform">
+                arrow_forward
+              </span>
+            </button>
+          )}
         </section>
 
         {/* Section 3: Danger Zone */}
@@ -157,14 +159,13 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate, userRo
             {terminating ? 'TERMINATING…' : 'TERMINATE SESSION'}
           </button>
           <p className="font-pixel text-[13px] text-[var(--vp-outline)] mt-2 text-center">
-            Resets free scan tokens to 3 · wipes vault bookmarks
+            Logs you out and clears local session data
           </p>
         </section>
       </main>
 
-      {/* Bottom Nav with <button> matching xpath: body/nav[1]/button[1], button[2], button[3] */}
+      {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-[var(--vp-cream)] border-t-4 border-[var(--vp-ink)] shadow-[0px_-4px_0px_0px_rgba(1,7,102,1)] md:hidden">
-        {/* Button 1 -> Scan */}
         <button
           type="button"
           onClick={() => onNavigate('scan', 'none')}
@@ -174,7 +175,6 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate, userRo
           <span className="font-pixel text-[13px] uppercase mt-1">Scan</span>
         </button>
 
-        {/* Button 2 -> Inventory / Vault */}
         <button
           type="button"
           onClick={() => onNavigate('inventory', 'none')}
@@ -184,7 +184,6 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate, userRo
           <span className="font-pixel text-[13px] uppercase mt-1">Vault</span>
         </button>
 
-        {/* Button 3 -> History */}
         <button
           type="button"
           onClick={() => onNavigate('history', 'none')}
@@ -194,7 +193,6 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate, userRo
           <span className="font-pixel text-[13px] uppercase mt-1">History</span>
         </button>
 
-        {/* Button 4 -> Profile (Active) */}
         <button
           type="button"
           className="flex flex-col items-center justify-center bg-[var(--vp-saffron)] text-[var(--vp-black-text)] border-2 border-[var(--vp-ink)] p-1 active:scale-95 transition-transform w-16 font-bold voxel-shadow-sm cursor-pointer"

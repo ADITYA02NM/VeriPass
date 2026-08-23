@@ -1,10 +1,13 @@
 import React, { useState, useCallback } from 'react';
 import { ScreenType } from '../types';
-import { ThreePassport } from '../components/ThreePassport';
-import { login, loginWithWallet, setSession, ApiError, UserInfo } from '../lib/api';
+import { PassportAnimation } from '../components/PassportAnimation';
+import { login, loginWithWallet, loginWithGoogle, setSession, ApiError, UserInfo } from '../lib/api';
 import { PeraWalletConnect } from '@perawallet/connect';
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 
 const peraWallet = new PeraWalletConnect({ chainId: 416002 });
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 interface LoginScreenProps {
   onNavigate: (screen: ScreenType, transition?: 'push' | 'push_back' | 'none') => void;
@@ -57,12 +60,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }
   }, [onLogin, onNavigate]);
 
+  const handleGoogleSuccess = useCallback(async (credentialResponse: any) => {
+    setError(null);
+    try {
+      const idToken = credentialResponse?.credential;
+      if (!idToken) throw new Error('No credential returned');
+      const { token, user } = await loginWithGoogle(idToken);
+      setSession(token, user);
+      onLogin(user);
+      onNavigate('scan', 'push');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Google sign-in failed');
+    }
+  }, [onLogin, onNavigate]);
+
+  const handleGoogleError = useCallback(() => {
+    setError('Google sign-in was cancelled or failed');
+  }, []);
+
   return (
     <div className="bg-[var(--vp-cream)] text-[var(--vp-on-surface)] min-h-screen flex items-center justify-center p-4 sm:p-6 font-['Inter']">
       <div className="max-w-md w-full flex flex-col gap-6 bg-[var(--vp-surface)] p-5 sm:p-6 border-2 border-[var(--vp-ink)] voxel-shadow">
         {/* Hero 3D Animation Section */}
         <div className="relative w-full h-48 sm:h-56 border-2 border-[var(--vp-ink)] bg-[var(--vp-container-low)] flex items-center justify-center overflow-hidden voxel-shadow-sm">
-          <ThreePassport />
+          <PassportAnimation />
           {/* Overlay branding */}
           <div className="absolute bottom-3 left-3 bg-[var(--vp-surface)] px-2.5 py-1 border-2 border-[var(--vp-ink)] pointer-events-none voxel-shadow-sm">
             <span className="font-pixel text-[18px] text-[var(--vp-ink-text)] uppercase tracking-widest font-bold">
@@ -171,6 +192,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             <span className="font-pixel text-[13px] text-[var(--vp-muted)] uppercase tracking-wider">or</span>
             <div className="flex-1 h-px bg-[var(--vp-outline)]/30" />
           </div>
+
+          {/* Google Sign-In */}
+          {GOOGLE_CLIENT_ID && (
+            <div className="flex flex-col items-center gap-2">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                text="signin_with"
+                shape="rectangular"
+                width="100%"
+              />
+            </div>
+          )}
 
           {/* Pera Wallet Connect */}
           <button

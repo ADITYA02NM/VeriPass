@@ -131,11 +131,11 @@ export default function App() {
       case 'account':
         return <AccountScreen onNavigate={handleNavigate} userRole={userRole} user={user} onLogout={handleLogout} />;
       case 'profile-security':
-        return <ProfileSecurityScreen onNavigate={handleNavigate} />;
+        return <ProfileSecurityScreen onNavigate={handleNavigate} user={user} />;
       case 'preferences':
-        return <PreferencesScreen onNavigate={handleNavigate} />;
+        return <PreferencesScreen onNavigate={handleNavigate} user={user} />;
       case 'digital-signatures':
-        return <DigitalSignaturesScreen onNavigate={handleNavigate} />;
+        return <DigitalSignaturesScreen onNavigate={handleNavigate} user={user} />;
       case 'register':
         return <RegisterScreen onNavigate={handleNavigate} onLogin={handleLogin} />;
       case 'password-reset':

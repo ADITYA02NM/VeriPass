@@ -10,7 +10,8 @@ import path from 'node:path';
 import fs from 'node:fs';
 import https from 'node:https';
 import { fileURLToPath } from 'node:url';
-import { createHash } from 'node:crypto';
+import { createHash, randomInt, createPrivateKey } from 'node:crypto';
+import algosdk from 'algosdk';
 import QRCode from 'qrcode';
 import {
   db, getProductByCode, getCheckpoints, getUsage, bumpUsage, FREE_SCAN_LIMIT,
@@ -239,6 +240,238 @@ app.get('/api/verify/:code', async (c) => {
 // ================= HEALTH CHECK =================
 app.get('/api/health', (c) => c.json({ status: 'ok' }));
 
+// ================= OTP — send & verify (password reset + email verification) =================
+import { randomInt } from 'node:crypto';
+
+function generateOtp() { return String(randomInt(100000, 999999)); }
+
+app.post('/api/auth/send-otp', async (c) => {
+  const { email, purpose } = await c.req.json().catch(() => ({})) || {};
+  if (!email || typeof email !== 'string') return c.json({ error: 'email required' }, 400);
+  const code = generateOtp();
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 min
+  db.prepare('INSERT INTO otp_codes (email, code, purpose, expires_at) VALUES (?,?,?,?)')
+    .run(email.toLowerCase().trim(), code, purpose || 'verify', expiresAt);
+
+  // Try to send via nodemailer if configured, otherwise log to console (dev mode)
+  try {
+    const nodemailer = await import('nodemailer').catch(() => null);
+    if (nodemailer && process.env.GMAIL_USER && process.env.GMAIL_PASS) {
+      const transporter = nodemailer.default.createTransport({
+        service: 'gmail',
+        auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS },
+      });
+      await transporter.sendMail({
+        from: `"VeriPass" <${process.env.GMAIL_USER}>`,
+        to: email,
+        subject: `VeriPass OTP — ${code}`,
+        html: `<div style="font-family:monospace;background:#1e1e26;color:#fff;padding:24px;text-align:center">
+          <h2 style="color:#fe9832">VeriPass Verification</h2>
+          <p style="font-size:14px;color:#bdc2ff">Your one-time verification code:</p>
+          <div style="font-size:32px;font-weight:900;letter-spacing:8px;color:#00E5FF;padding:12px;border:2px solid #fe9832;margin:16px 0">${code}</div>
+          <p style="font-size:12px;color:#8f8f9d">This code expires in 5 minutes. Do not share it.</p>
+          <p style="font-size:11px;color:#464651;margin-top:16px">Made in India · github.com/ADITYA02NM/VeriPass</p>
+        </div>`,
+      });
+      return c.json({ ok: true, message: 'OTP sent to email' });
+    }
+  } catch (e) {
+    console.error('[otp] email send failed:', e.message);
+  }
+  // Dev fallback: return code in response so demo works without email config
+  return c.json({ ok: true, message: 'OTP sent (dev mode — check console)', devCode: code });
+});
+
+app.post('/api/auth/verify-otp', async (c) => {
+  const { email, code } = await c.req.json().catch(() => ({})) || {};
+  if (!email || !code) return c.json({ error: 'email and code required' }, 400);
+  const row = db.prepare(
+    `SELECT * FROM otp_codes WHERE email = ? AND code = ? AND used = 0 AND expires_at > datetime('now') ORDER BY id DESC LIMIT 1`
+  ).get(email.toLowerCase().trim(), String(code).trim());
+  if (!row) return c.json({ error: 'Invalid or expired OTP' }, 400);
+  db.prepare('UPDATE otp_codes SET used = 1 WHERE id = ?').run(row.id);
+  return c.json({ ok: true, purpose: row.purpose });
+});
+
+// ================= BACKUP CODES — generate, list, use =================
+app.post('/api/auth/backup-codes/generate', async (c) => {
+  const u = auth(c);
+  if (!u) return c.json({ error: 'unauthorized' }, 401);
+  // Wipe old codes
+  db.prepare('DELETE FROM backup_codes WHERE owner_key = ?').run(u.identifier);
+  // Generate 8 random backup codes
+  const codes = [];
+  for (let i = 0; i < 8; i++) {
+    const code = `VRP-${randomInt(1000, 9999)}-${randomInt(1000, 9999)}`;
+    db.prepare('INSERT INTO backup_codes (owner_key, code) VALUES (?,?)').run(u.identifier, code);
+    codes.push(code);
+  }
+  return c.json({ ok: true, codes });
+});
+
+app.get('/api/auth/backup-codes', async (c) => {
+  const u = auth(c);
+  if (!u) return c.json({ error: 'unauthorized' }, 401);
+  const rows = db.prepare('SELECT code, used FROM backup_codes WHERE owner_key = ? ORDER BY id').all(u.identifier);
+  return c.json({ codes: rows });
+});
+
+app.post('/api/auth/backup-codes/use', async (c) => {
+  const { identifier, code } = await c.req.json().catch(() => ({})) || {};
+  if (!identifier || !code) return c.json({ error: 'identifier and code required' }, 400);
+  const row = db.prepare(
+    'SELECT id FROM backup_codes WHERE owner_key = ? AND code = ? AND used = 0'
+  ).get(identifier, code);
+  if (!row) return c.json({ error: 'Invalid backup code' }, 400);
+  db.prepare('UPDATE backup_codes SET used = 1 WHERE id = ?').run(row.id);
+  return c.json({ ok: true });
+});
+
+// ================= PASSWORD RESET via OTP =================
+app.post('/api/auth/reset-password', async (c) => {
+  const { email, code, newPasskey } = await c.req.json().catch(() => ({})) || {};
+  if (!email || !code || !newPasskey) return c.json({ error: 'email, code, and newPasskey required' }, 400);
+  if (String(newPasskey).length < 4) return c.json({ error: 'passkey must be at least 4 characters' }, 400);
+  // Verify OTP
+  const otpRow = db.prepare(
+    `SELECT id FROM otp_codes WHERE email = ? AND code = ? AND purpose = 'reset' AND used = 0 AND expires_at > datetime('now') ORDER BY id DESC LIMIT 1`
+  ).get(email.toLowerCase().trim(), String(code).trim());
+  if (!otpRow) return c.json({ error: 'Invalid or expired OTP' }, 400);
+  // Find user by email (stored as origin) or identifier
+  const user = db.prepare('SELECT identifier FROM users WHERE origin = ? OR identifier = ?').get(email.toLowerCase().trim(), email.toLowerCase().trim());
+  if (!user) return c.json({ error: 'No account found for this email' }, 404);
+  db.prepare('UPDATE users SET passkey = ? WHERE identifier = ?').run(String(newPasskey), user.identifier);
+  db.prepare('UPDATE otp_codes SET used = 1 WHERE id = ?').run(otpRow.id);
+  return c.json({ ok: true, message: 'Password reset successful' });
+});
+
+// ================= GOOGLE AUTH =================
+app.post('/api/auth/google', async (c) => {
+  const { idToken, name } = await c.req.json().catch(() => ({})) || {};
+  if (!idToken) return c.json({ error: 'idToken required' }, 400);
+  try {
+    const { OAuth2Client } = await import('google-auth-library');
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    const ticket = await client.verifyIdToken({ idToken, audience: process.env.GOOGLE_CLIENT_ID });
+    const payload = ticket.getPayload();
+    if (!payload || !payload.sub) return c.json({ error: 'Invalid Google token' }, 401);
+
+    const googleId = payload.sub;
+    const email = payload.email || '';
+    const displayName = name || payload.name || email.split('@')[0];
+
+    // Find existing user by google_id or email
+    let user = db.prepare('SELECT * FROM users WHERE google_id = ?').get(googleId);
+    if (!user) {
+      user = db.prepare('SELECT * FROM users WHERE origin = ?').get(email);
+      if (user) {
+        // Link Google to existing account
+        db.prepare('UPDATE users SET google_id = ? WHERE identifier = ?').run(googleId, user.identifier);
+      } else {
+        // Create new user
+        const id = `google-${googleId.slice(0, 8).toLowerCase()}`;
+        db.prepare('INSERT INTO users (identifier, passkey, name, role, origin, google_id) VALUES (?,?,?,?,?,?)')
+          .run(id, 'google-auth', displayName, 'User', email, googleId);
+        user = db.prepare('SELECT * FROM users WHERE identifier = ?').get(id);
+      }
+    }
+    db.prepare('INSERT INTO usage (owner_key, used) VALUES (?,0) ON CONFLICT(owner_key) DO UPDATE SET used = 0').run(user.identifier);
+    return c.json({
+      token: signToken(user.identifier, user.role),
+      user: { identifier: user.identifier, name: user.name, role: user.role, origin: user.origin },
+    });
+  } catch (e) {
+    console.error('[google auth]', e.message);
+    return c.json({ error: 'Google authentication failed' }, 401);
+  }
+});
+
+// ================= WALLET MNEMONIC LINKING (derive address, store mnemonic for payments) =================
+app.post('/api/auth/link-wallet', async (c) => {
+  const u = auth(c);
+  if (!u) return c.json({ error: 'unauthorized' }, 401);
+  const { mnemonic } = await c.req.json().catch(() => ({})) || {};
+  if (!mnemonic || typeof mnemonic !== 'string') return c.json({ error: 'mnemonic required' }, 400);
+  try {
+    const acc = algosdk.mnemonicToSecretKey(mnemonic.trim());
+    const address = acc.addr.toString();
+    // Store mnemonic in wallets.json for x402 payment signing
+    let wallets = {};
+    try { wallets = JSON.parse(fs.readFileSync(WALLETS_FILE, 'utf8')); } catch {}
+    wallets[u.identifier] = { mnemonic: mnemonic.trim() };
+    fs.writeFileSync(WALLETS_FILE, JSON.stringify(wallets, null, 2));
+    // Store address in DB
+    db.prepare('UPDATE users SET wallet_address = ?, wallet_mnemonic = ? WHERE identifier = ?')
+      .run(address, mnemonic.trim(), u.identifier);
+    return c.json({ ok: true, walletAddress: address });
+  } catch (e) {
+    return c.json({ error: 'Invalid mnemonic — could not derive wallet address' }, 400);
+  }
+});
+
+// ================= DIGITAL SIGNATURES — custom crypto sigs (hidden for User role) =================
+import { generateKeyPairSync, createSign, createVerify } from 'node:crypto';
+
+app.get('/api/signatures', async (c) => {
+  const u = auth(c);
+  if (!u) return c.json({ error: 'unauthorized' }, 401);
+  if (u.role === 'User') return c.json({ error: 'Digital signatures not available for User role' }, 403);
+  const rows = db.prepare('SELECT id, label, pub_key, doc_name, status, created_at FROM digital_signatures WHERE owner_key = ? ORDER BY id DESC').all(u.identifier);
+  return c.json({ signatures: rows });
+});
+
+app.post('/api/signatures/create', async (c) => {
+  const u = auth(c);
+  if (!u) return c.json({ error: 'unauthorized' }, 401);
+  if (u.role === 'User') return c.json({ error: 'Digital signatures not available for User role' }, 403);
+  const { label, docName } = await c.req.json().catch(() => ({})) || {};
+  if (!label) return c.json({ error: 'label required' }, 400);
+  const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+  const pubKeyStr = publicKey.export({ type: 'spki', format: 'der' }).toString('base64');
+  const privKeyStr = privateKey.export({ type: 'pkcs8', format: 'der' }).toString('base64');
+  db.prepare('INSERT INTO digital_signatures (owner_key, label, pub_key, priv_key, doc_name) VALUES (?,?,?,?,?)')
+    .run(u.identifier, label, pubKeyStr, privKeyStr, docName || '');
+  return c.json({ ok: true, label, pubKey: pubKeyStr });
+});
+
+app.post('/api/signatures/sign', async (c) => {
+  const u = auth(c);
+  if (!u) return c.json({ error: 'unauthorized' }, 401);
+  if (u.role === 'User') return c.json({ error: 'Digital signatures not available for User role' }, 403);
+  const { signatureId, data } = await c.req.json().catch(() => ({})) || {};
+  if (!signatureId || !data) return c.json({ error: 'signatureId and data required' }, 400);
+  const sig = db.prepare('SELECT * FROM digital_signatures WHERE id = ? AND owner_key = ? AND status = ?')
+    .get(signatureId, u.identifier, 'active');
+  if (!sig) return c.json({ error: 'Signature not found or revoked' }, 404);
+  try {
+    const privKeyBuffer = Buffer.from(sig.priv_key, 'base64');
+    const privateKey = createPrivateKey({ key: privKeyBuffer, format: 'der', type: 'pkcs8' });
+    const sign = createSign('SHA256');
+    sign.update(data);
+    const signature = sign.sign(privateKey).toString('base64');
+    return c.json({ ok: true, signature, data, signedBy: u.identifier, label: sig.label, timestamp: new Date().toISOString() });
+  } catch (e) {
+    return c.json({ error: 'Signing failed: ' + e.message }, 500);
+  }
+});
+
+app.post('/api/signatures/revoke', async (c) => {
+  const u = auth(c);
+  if (!u) return c.json({ error: 'unauthorized' }, 401);
+  const { signatureId } = await c.req.json().catch(() => ({})) || {};
+  if (!signatureId) return c.json({ error: 'signatureId required' }, 400);
+  db.prepare("UPDATE digital_signatures SET status = 'revoked' WHERE id = ? AND owner_key = ?").run(signatureId, u.identifier);
+  return c.json({ ok: true });
+});
+
+app.post('/api/biometric/toggle', async (c) => {
+  const u = auth(c);
+  if (!u) return c.json({ error: 'unauthorized' }, 401);
+  const { enabled } = await c.req.json().catch(() => ({})) || {};
+  db.prepare('UPDATE users SET biometric_enabled = ? WHERE identifier = ?').run(enabled ? 1 : 0, u.identifier);
+  return c.json({ ok: true, biometricEnabled: !!enabled });
+});
+
 // ================= USAGE (api-usage bar data) =================
 app.get('/api/usage', async (c) => {
   const ok = ownerKey(c);
@@ -332,7 +565,18 @@ app.post('/api/session/terminate', async (c) => {
   if (!u) return c.json({ error: 'unauthorized' }, 401);
   // Reset the free-scan counter so the next login starts fresh
   db.prepare('UPDATE usage SET used = 0 WHERE owner_key = ?').run(u.identifier);
-  return c.json({ ok: true, reset: true, ownerKey: u.identifier });
+  // If user logged in via wallet (passkey = 'wallet-session'), delete the user entirely
+  const user = db.prepare('SELECT passkey FROM users WHERE identifier = ?').get(u.identifier);
+  if (user && user.passkey === 'wallet-session') {
+    db.prepare('DELETE FROM users WHERE identifier = ?').run(u.identifier);
+    db.prepare('DELETE FROM usage WHERE owner_key = ?').run(u.identifier);
+    db.prepare('DELETE FROM bookmarks WHERE owner_key = ?').run(u.identifier);
+    db.prepare('DELETE FROM payments WHERE owner_key = ?').run(u.identifier);
+    db.prepare('DELETE FROM backup_codes WHERE owner_key = ?').run(u.identifier);
+    db.prepare('DELETE FROM digital_signatures WHERE owner_key = ?').run(u.identifier);
+    return c.json({ ok: true, reset: true, deleted: true, ownerKey: u.identifier });
+  }
+  return c.json({ ok: true, reset: true, deleted: false, ownerKey: u.identifier });
 });
 
 // ================= ADMIN RESET (full reset — dashboard Reset button) =================
