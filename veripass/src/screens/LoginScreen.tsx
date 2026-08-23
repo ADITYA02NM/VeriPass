@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ScreenType } from '../types';
 import { ThreePassport } from '../components/ThreePassport';
-import { login, setSession, ApiError, UserInfo } from '../lib/api';
+import { login, loginWithWallet, setSession, ApiError, UserInfo } from '../lib/api';
+import { PeraWalletConnect } from '@perawallet/connect';
+
+const peraWallet = new PeraWalletConnect({ chainId: 416002 });
 
 interface LoginScreenProps {
   onNavigate: (screen: ScreenType, transition?: 'push' | 'push_back' | 'none') => void;
@@ -12,10 +15,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onNavigate,
   onLogin,
 }) => {
-  const [identifier, setIdentifier] = useState('user');
-  const [passkey, setPasskey] = useState('user');
+  const [identifier, setIdentifier] = useState('');
+  const [passkey, setPasskey] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [walletLoading, setWalletLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +37,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       setLoading(false);
     }
   };
+
+  const handlePeraConnect = useCallback(async () => {
+    setError(null);
+    setWalletLoading(true);
+    try {
+      const accounts = await peraWallet.connect();
+      const walletAddress = accounts[0];
+      if (!walletAddress) throw new Error('No wallet address returned');
+      const { token, user } = await loginWithWallet(walletAddress);
+      setSession(token, user);
+      onLogin(user);
+      onNavigate('scan', 'push');
+    } catch (err) {
+      if (err?.message?.includes('connected')) return; // user cancelled
+      setError(err instanceof ApiError ? err.message : 'Wallet connection failed');
+    } finally {
+      setWalletLoading(false);
+    }
+  }, [onLogin, onNavigate]);
 
   return (
     <div className="bg-[var(--vp-cream)] text-[var(--vp-on-surface)] min-h-screen flex items-center justify-center p-4 sm:p-6 font-['Inter']">
@@ -140,6 +164,32 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               Register New Entity
             </button>
           </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 mt-1">
+            <div className="flex-1 h-px bg-[var(--vp-outline)]/30" />
+            <span className="font-pixel text-[13px] text-[var(--vp-muted)] uppercase tracking-wider">or</span>
+            <div className="flex-1 h-px bg-[var(--vp-outline)]/30" />
+          </div>
+
+          {/* Pera Wallet Connect */}
+          <button
+            type="button"
+            onClick={handlePeraConnect}
+            disabled={walletLoading}
+            className="w-full bg-[#0033AD] text-white border-2 border-[#002288] py-3.5 font-pixel text-[19px] uppercase tracking-widest voxel-shadow-sm voxel-btn-active transition-all flex items-center justify-center gap-3 hover:bg-[#002888] cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+          >
+            {walletLoading ? (
+              <span className="material-symbols-outlined text-xl animate-spin" style={{ fontVariationSettings: "'FILL' 1" }}>
+                progress_activity
+              </span>
+            ) : (
+              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zm-9-1a2 2 0 0 1 4 0v1h-4V6zm8 13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h6v1a1 1 0 0 0 2 0V9h2v11z"/>
+              </svg>
+            )}
+            {walletLoading ? 'Connecting...' : 'Connect Pera Wallet'}
+          </button>
 
           {/* Recovery Link */}
           <div className="text-center mt-2">

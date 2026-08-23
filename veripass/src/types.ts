@@ -10,7 +10,6 @@ export type ScreenType =
   | 'register'
   | 'password-reset'
   | 'payment'
-  | 'pricing'
   | 'ai-chat'
   | 'wallet';
 

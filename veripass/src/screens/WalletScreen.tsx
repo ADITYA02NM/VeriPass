@@ -20,8 +20,10 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ onNavigate }) => {
   const [spending, setSpending] = useState<SpendingInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [limitInput, setLimitInput] = useState('');
+  const [selectedLimit, setSelectedLimit] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const LIMIT_OPTIONS = [9, 15, 25, 35, 50, 75, 99];
 
   useEffect(() => {
     Promise.all([getPayments(), getSpending()])
@@ -31,13 +33,11 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ onNavigate }) => {
   }, []);
 
   const handleSaveLimit = async () => {
-    const val = parseFloat(limitInput);
-    if (!val || val <= 0 || val > 1) return;
+    const val = selectedLimit === null ? 99 : selectedLimit;
     setSaving(true);
     try {
       const res = await setSpendingLimit(val);
       setSpending((s) => s ? { ...s, spendLimit: res.spendLimit, remaining: Math.max(0, res.spendLimit - s.totalSpent) } : s);
-      setLimitInput('');
     } catch {
       // ignore
     } finally {
@@ -99,25 +99,38 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ onNavigate }) => {
               <p className="font-pixel text-[14px] text-[var(--vp-outline)] uppercase mb-2">
                 AI Spending Limit: {spending.spendLimit} ALGO
               </p>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  max="1"
-                  value={limitInput}
-                  onChange={(e) => setLimitInput(e.target.value)}
-                  placeholder={`Current: ${spending.spendLimit}`}
-                  className="flex-1 border-2 border-[var(--vp-ink)] bg-[var(--vp-cream)] px-3 py-2 text-[15px] font-pixel focus:outline-none focus:bg-[var(--vp-surface)]"
-                />
+              <div className="flex flex-wrap gap-2 mb-3">
+                {LIMIT_OPTIONS.map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setSelectedLimit(v)}
+                    className={`font-pixel text-[13px] uppercase tracking-wider border-2 border-[var(--vp-ink)] px-3 py-1.5 transition-all cursor-pointer ${
+                      selectedLimit === v
+                        ? 'bg-[var(--vp-ink)] text-[var(--vp-cream-text)]'
+                        : 'bg-[var(--vp-cream)] text-[var(--vp-ink-text)] hover:bg-[var(--vp-container-high)]'
+                    }`}
+                  >
+                    {v} ALGO
+                  </button>
+                ))}
                 <button
-                  onClick={handleSaveLimit}
-                  disabled={saving || !limitInput}
-                  className="bg-[var(--vp-ink)] text-[var(--vp-cream-text)] font-pixel text-[14px] px-4 py-2 border-2 border-[var(--vp-ink)] voxel-shadow-sm hover:bg-[var(--vp-saffron)] hover:text-[var(--vp-ink-text)] disabled:opacity-50 transition-all cursor-pointer"
+                  onClick={() => setSelectedLimit(null)}
+                  className={`font-pixel text-[13px] uppercase tracking-wider border-2 border-[var(--vp-ink)] px-3 py-1.5 transition-all cursor-pointer ${
+                    selectedLimit === null
+                      ? 'bg-[var(--vp-ink)] text-[var(--vp-cream-text)]'
+                      : 'bg-[var(--vp-cream)] text-[var(--vp-ink-text)] hover:bg-[var(--vp-container-high)]'
+                  }`}
                 >
-                  {saving ? '...' : 'SET'}
+                  No Limit
                 </button>
               </div>
+              <button
+                onClick={handleSaveLimit}
+                disabled={saving}
+                className="bg-[var(--vp-ink)] text-[var(--vp-cream-text)] font-pixel text-[14px] px-4 py-2 border-2 border-[var(--vp-ink)] voxel-shadow-sm hover:bg-[var(--vp-saffron)] hover:text-[var(--vp-ink-text)] disabled:opacity-50 transition-all cursor-pointer"
+              >
+                {saving ? '...' : 'SET LIMIT'}
+              </button>
             </div>
           </section>
         )}

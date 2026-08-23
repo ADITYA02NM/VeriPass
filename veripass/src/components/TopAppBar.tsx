@@ -19,12 +19,12 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   return (
     <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 h-16 bg-[var(--vp-cream)] border-b-4 border-[var(--vp-ink)] shadow-[4px_4px_0px_0px_rgba(1,7,102,1)]">
       <div className="flex items-center gap-3">
-        {/* Hourglass → Billing (plans & pricing) */}
+        {/* Wallet icon → Wallet screen */}
         <button
-          onClick={() => onNavigate('pricing')}
+          onClick={() => onNavigate('wallet')}
           className="p-1.5 voxel-border bg-[var(--vp-cream)] voxel-shadow-sm hover:bg-[var(--vp-container)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center text-[var(--vp-ink-text)]"
-          aria-label="Wallet & Billing"
-          title="Wallet & Billing"
+          aria-label="Wallet"
+          title="Wallet"
         >
           <span className="material-symbols-outlined text-xl">account_balance_wallet</span>
         </button>

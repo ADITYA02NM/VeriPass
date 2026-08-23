@@ -7,7 +7,7 @@
 *AI agents that pay per-use · Supply-chain verification · Machine-to-machine payments*
 
 **Live Project → [veripass-t3ef.onrender.com](https://veripass-t3ef.onrender.com)**  
-**GitHub → [github.com/Rakshhith-S/VeriPass](https://github.com/Rakshhith-S/VeriPass)**
+**GitHub → [github.com/ADITYA02NM/VeriPass](https://github.com/ADITYA02NM/VeriPass)**
 
 ---
 
@@ -19,7 +19,7 @@
 |---|---|
 | Working project | Deployed on Render (live) |
 | x402 integration | `@x402/hono` + `@x402/avm` + `@x402-avm/extensions` on Algorand TestNet |
-| Public GitHub repo | `github.com/Rakshhith-S/VeriPass` |
+| Public GitHub repo | `github.com/ADITYA02NM/VeriPass` |
 | README | This document |
 | Contract IDs | No smart contracts — x402 uses native Algorand payment transactions (not ASA/ARC4) |
 | Demo / deployed link | [veripass-t3ef.onrender.com](https://veripass-t3ef.onrender.com) |
@@ -34,12 +34,13 @@
 | Parameter | Value |
 |---|---|
 | **Network** | Algorand TestNet |
-| **Receiver Address** | `QXEMYGSAHRJPLX3XPNRNPFNDPKTMAWKDDNZSOG7HICAJTK5AB636DZD6JI` |
+| **Platform Receiver** | `FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M` |
 | **Payment Method** | Native ALGO transactions (via `algosdk.makePaymentTxnWithSuggestedParamsFromObject`) |
 | **Smart Contracts** | None — payments are direct wallet-to-wallet transfers |
 | **Facilitator** | GoPlausible x402 |
 | **ALGOD Endpoint** | `https://testnet-api.algonode.cloud` |
 | **Explorer** | [Lora TestNet](https://lora.algokit.io/testnet) |
+| **Platform Account** | [View Transactions](https://lora.algokit.io/testnet/account/FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M) |
 
 ### Why No Smart Contracts?
 
@@ -52,11 +53,11 @@ VeriPass uses **native payment transactions** instead of smart contracts because
 
 Each payment creates a real Algorand TestNet transaction:
 ```javascript
-// x402.js — real payment
+// x402.js — user wallet pays platform receiver
 const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-  sender: acc.address,
-  receiver: acc.address, // self-payment in demo
-  amount: microAlgos,    // e.g. 1000 (0.001 ALGO)
+  sender: userWallet.address,    // per-user wallet
+  receiver: PLATFORM_RECEIVER,   // platform fee collection
+  amount: microAlgos,            // e.g. 2000 (0.002 ALGO)
   suggestedParams: params,
 });
 ```
@@ -79,8 +80,8 @@ Meanwhile, **AI agents** (autonomous software bots) are emerging as the new econ
 
 VeriPass is an **anti-counterfeit product-passport platform** that combines:
 
-1. **x402 HTTP Payment Protocol** — Agents pay per-use in ALGO (0.001–0.005 ALGO per action) on Algorand TestNet
-2. **8 Specialist AI Agents** — Each agent handles a specific domain (inventory, passport, market, search, etc.) and charges per query
+1. **x402 HTTP Payment Protocol** — Agents pay per-use in ALGO (0.002–0.005 ALGO per action) on Algorand TestNet
+2. **7 Specialist AI Agents** — Each agent handles a specific domain (inventory, passport, market, search, etc.) and charges per query
 3. **Supply-Chain Passport** — Every product gets a chain-of-custody record with cryptographically signed checkpoints
 4. **Agentic Research Agent** — Pays 3 services in sequence (market-data → news → report) with spend-policy guard
 
@@ -101,7 +102,7 @@ The x402 protocol (HTTP 402 Payment Required) is **not forced** — it's the nat
 ### With x402
 - **Pay-per-use**: 0.002 ALGO (~₹0.14) per scan — no minimum, no commitment
 - **Agent autonomy**: AI agents auto-pay for data, reports, and analysis without human intervention
-- **Machine-to-machine**: Agent A pays Agent B 0.001 ALGO for market data — instant settlement
+- **Machine-to-machine**: Agent A pays Agent B 0.003 ALGO for market data — instant settlement
 - **No middlemen**: Direct Algorand transactions, near-zero fees, 3.3s finality
 - **Spend-policy guard**: Agents can't overspend — budget checked before every payment
 
@@ -109,10 +110,10 @@ The x402 protocol (HTTP 402 Payment Required) is **not forced** — it's the nat
 ```
 User scans QR → Backend agent auto-pays 0.002 ALGO → Gets full supply-chain passport
 User asks AI "compare these products" → Agent pays 0.005 ALGO → Gets comparison report
-Research agent runs → Pays market-data (0.001) → Pays news (0.001) → Pays report (0.001)
+Research agent runs → Pays market-data (0.003) → Pays news (0.003) → Pays report (0.003)
 ```
 
-Every payment is a real Algorand TestNet transaction, viewable on [Lora Explorer](https://lora.algokit.io).
+Every payment is a real Algorand TestNet transaction, viewable on [Lora Explorer](https://lora.algokit.io/testnet/account/FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M).
 
 ---
 
@@ -126,25 +127,25 @@ Every payment is a real Algorand TestNet transaction, viewable on [Lora Explorer
 │  ┌──────────┐     ┌──────────────┐     ┌──────────────────┐   │
 │  │  Mobile   │────▶│  React SPA   │────▶│   Hono Backend   │   │
 │  │  Browser  │◀────│  (Vite + TS) │◀────│   (Node.js)      │   │
-│  └──────────┘     └──────────────┘     └────────┬─────────┘   │
-│                                                   │             │
-│                          ┌────────────────────────┼────────┐   │
-│                          │                        │        │   │
-│                          ▼                        ▼        ▼   │
-│                   ┌────────────┐  ┌──────────┐  ┌─────────┐   │
-│                   │  SQLite DB │  │ Gemini   │  │ x402    │   │
-│                   │  (users,   │  │ AI       │  │ Payment │   │
-│                   │  products, │  │ (8 agents│  │ (Algo   │   │
-│                   │  payments) │  │  + tools)│  │ TestNet)│   │
-│                   └────────────┘  └──────────┘  └─────────┘   │
-│                                                           │     │
-│                          ┌────────────────────────────────┘     │
-│                          ▼                                      │
-│                   ┌──────────────┐                              │
-│                   │  Algorand    │                              │
-│                   │  TestNet     │                              │
-│                   │  (Lora)      │                              │
-│                   └──────────────┘                              │
+│  │  + Pera   │     └──────────────┘     └────────┬─────────┘   │
+│  │  Wallet   │                                    │             │
+│  └──────────┘     ┌──────────────────────────────┼────────┐   │
+│                    │                              │        │   │
+│                    ▼                              ▼        ▼   │
+│             ┌────────────┐  ┌──────────┐  ┌─────────────┐     │
+│             │  SQLite DB │  │ Gemini   │  │ x402        │     │
+│             │  (users,   │  │ AI       │  │ Payment     │     │
+│             │  products, │  │ (7 agents│  │ (Algo       │     │
+│             │  payments) │  │  + tools)│  │ TestNet)    │     │
+│             └────────────┘  └──────────┘  └──────┬──────┘     │
+│                                                    │           │
+│                    ┌───────────────────────────────┘           │
+│                    ▼                                           │
+│             ┌──────────────┐                                   │
+│             │  Algorand    │                                   │
+│             │  TestNet     │                                   │
+│             │  (Lora)      │                                   │
+│             └──────────────┘                                   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -152,9 +153,9 @@ Every payment is a real Algorand TestNet transaction, viewable on [Lora Explorer
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 19, Vite, TypeScript, Tailwind CSS |
+| Frontend | React 19, Vite, TypeScript, Tailwind CSS, Pera WalletConnect |
 | Backend | Hono (Node.js), SQLite (node:sqlite) |
-| AI | Google Gemini (gemini-3.6-flash) — 8 specialist agents |
+| AI | Google Gemini (gemini-3.6-flash) — 7 specialist agents |
 | Payments | x402 protocol, Algorand TestNet (algosdk v3) |
 | Facilitator | GoPlausible x402 facilitator |
 | Hosting | Render (free tier) |
@@ -168,6 +169,7 @@ Every payment is a real Algorand TestNet transaction, viewable on [Lora Explorer
 "@x402-avm/extensions": "^2.6.1",
 "algosdk": "^3.6.0",
 "@google/genai": "^2.18.0",
+"@perawallet/connect": "^1.6.0",
 "hono": "^4.13.2"
 ```
 
@@ -189,16 +191,15 @@ VeriPass supports product verification across multiple industries:
 
 ## AI Agentic System
 
-VeriPass features **8 specialist AI agents** that work together via x402 micropayments:
+VeriPass features **7 specialist AI agents** that work together via x402 micropayments:
 
 | Agent | Function | Price |
 |---|---|---|
-| **Inventory Agent** | Lists bookmarked products with live verdicts | 0.001 ALGO |
-| **Passport Agent** | Full chain-of-custody for one product | 0.001 ALGO |
-| **Market Agent** | Market price lookup (INR) | 0.002 ALGO |
-| **Usage Agent** | Free-scan usage and credit balance | 0.001 ALGO |
-| **Proof Agent** | Dashboard stats: payments, purchases, signatures | 0.002 ALGO |
-| **Guide Agent** | Demo and project documentation | 0.002 ALGO |
+| **Inventory Agent** | Lists bookmarked products with live verdicts | 0.003 ALGO |
+| **Passport Agent** | Full chain-of-custody for one product | 0.003 ALGO |
+| **Market Agent** | Market price lookup (INR) | 0.004 ALGO |
+| **Usage Agent** | Usage stats and wallet balance | 0.003 ALGO |
+| **Proof Agent** | Dashboard stats: payments and signatures | 0.004 ALGO |
 | **Search Agent** | Full catalogue search | 0.005 ALGO |
 | **Compare Agent** | Side-by-side product comparison | 0.005 ALGO |
 
@@ -207,7 +208,7 @@ VeriPass features **8 specialist AI agents** that work together via x402 micropa
 The Research Agent demonstrates **machine-to-machine payments** by paying 3 services in sequence:
 
 ```
-Research Query → market-data (0.001 ALGO) → news-summary (0.001 ALGO) → report-generate (0.001 ALGO)
+Research Query → market-data (0.003 ALGO) → news-summary (0.003 ALGO) → report-generate (0.003 ALGO)
 ```
 
 Each payment is checked against a **spend-policy guard** (max 3 calls per run) before execution.
@@ -220,14 +221,14 @@ Each payment is checked against a **spend-policy guard** (max 3 calls per run) b
 
 All payments are real Algorand TestNet transactions, viewable on Lora Explorer:
 
-| Transaction Type | Explorer Link |
-|---|---|
-| Product Verification (0.002 ALGO) | [View on Lora](https://lora.algokit.io/testnet) |
-| AI Agent Query (0.001–0.005 ALGO) | [View on Lora](https://lora.algokit.io/testnet) |
-| Research Agent Run (0.003 ALGO total) | [View on Lora](https://lora.algokit.io/testnet) |
-| Plan Purchase | [View on Lora](https://lora.algokit.io/testnet) |
+| Transaction Type | Amount | Explorer Link |
+|---|---|---|
+| Product Verification | 0.002 ALGO | [View Platform Account](https://lora.algokit.io/testnet/account/FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M) |
+| AI Agent Query | 0.003–0.005 ALGO | [View Platform Account](https://lora.algokit.io/testnet/account/FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M) |
+| Research Agent Run | 0.009 ALGO total | [View Platform Account](https://lora.algokit.io/testnet/account/FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M) |
+| History Lookup | 0.001 ALGO | [View Platform Account](https://lora.algokit.io/testnet/account/FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M) |
 
-> **Note**: Transactions appear in the payments table with txid, sender, receiver, amount, and network. In demo mode (unfunded wallet), simulated transactions use the `SIM-` prefix.
+> **Note**: All transactions are direct wallet-to-wallet ALGO transfers. Each user has a unique TestNet wallet. In demo mode, simulated transactions use the `SIM-` prefix.
 
 ---
 
@@ -264,7 +265,7 @@ All payments are real Algorand TestNet transactions, viewable on Lora Explorer:
 ### Quick Start (Demo)
 
 1. Visit [veripass-t3ef.onrender.com](https://veripass-t3ef.onrender.com)
-2. Login with demo credentials: `user` / `user`
+2. Login with demo credentials: `user` / `user` or connect via **Pera Wallet**
 3. Scan a product QR code or enter manually (e.g., `AS-SENSOR-2026-001`)
 4. View supply-chain passport and verification verdict
 5. Try the AI assistant for product queries
@@ -273,7 +274,7 @@ All payments are real Algorand TestNet transactions, viewable on Lora Explorer:
 
 ```bash
 # Clone the repo
-git clone https://github.com/Rakshhith-S/VeriPass.git
+git clone https://github.com/ADITYA02NM/VeriPass.git
 cd VeriPass
 
 # Backend setup
@@ -297,8 +298,9 @@ npm run dev
 PORT=8080
 GEMINI_API_KEY=your-gemini-key
 VERIPASS_SECRET=your-hmac-secret
-PAY_TO_ADDRESS=QXEMYGSAHRJPLX3XPNRNPFNDPKTMAWKDDNZSOG7HICAJTK5AB636DZD6JI
 ```
+
+> **Note**: Wallet addresses and payment configuration are managed in `backend/data/wallets.json` (not committed to repo).
 
 ---
 
@@ -307,6 +309,7 @@ PAY_TO_ADDRESS=QXEMYGSAHRJPLX3XPNRNPFNDPKTMAWKDDNZSOG7HICAJTK5AB636DZD6JI
 ### Authentication
 - `POST /api/auth/login` — Login with identifier + passkey
 - `POST /api/auth/register` — Create new account
+- `POST /api/auth/wallet` — Login via Pera Wallet (wallet address)
 
 ### Product Verification
 - `GET /api/verify/:code` — Verify product (x402 paid: 0.002 ALGO)
@@ -314,16 +317,18 @@ PAY_TO_ADDRESS=QXEMYGSAHRJPLX3XPNRNPFNDPKTMAWKDDNZSOG7HICAJTK5AB636DZD6JI
 - `POST /api/products/:code/bookmark` — Bookmark product
 
 ### AI Agents
-- `POST /api/ai/chat` — Chat with AI agents (1–5 credits per query)
+- `POST /api/ai/chat` — Chat with AI agents (0.003–0.005 ALGO per query)
 - `GET /api/ai/agents` — List available agents
 - `POST /api/agent/run` — Run research agent (3 sequential payments)
 - `POST /api/agent/price-check` — Single service agent
 - `POST /api/agent/info` — Product info agent
 
-### Payments
+### Payments & Wallet
 - `POST /api/x402/pay` — Execute x402 payment
-- `GET /api/usage` — Check usage and credits
-- `GET /api/payments` — Payment history with tx links
+- `GET /api/usage` — Check usage stats
+- `GET /api/payments` — Payment history with lora.algorand tx links
+- `GET /api/spending` — Spending limit and balance
+- `POST /api/spending/limit` — Set AI spending cap
 
 ### Admin
 - `GET /dashboard` — Admin dashboard
@@ -374,7 +379,7 @@ MIT License — Built for the x402 Pre-Hack on Algorand
 
 <div align="center">
 
-**Made with by Cyber Assassins**
+**Made with ❤️ by Cyber Assassins**
 
 *VeriPass — Every product has a story. Verify it.*
 

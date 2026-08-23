@@ -10,7 +10,6 @@ export interface UserInfo {
   name: string;
   role: 'User' | 'Producer' | 'Logistics' | 'Retailer';
   origin: string;
-  credits?: number;
 }
 
 export interface Verdict {
@@ -70,24 +69,6 @@ export interface UsageInfo {
   used: number;
   charged: boolean;
   priceAlgo: string;
-  credits: number;
-}
-
-export interface Plan {
-  id: number;
-  name: string;
-  credits: number;
-  price_inr: number;
-  tagline: string;
-}
-
-export interface PurchaseResult {
-  ok: boolean;
-  plan: string;
-  creditsAdded: number;
-  credits: number;
-  amountInr: number;
-  cardLast4: string;
 }
 
 export interface PayResult {
@@ -175,6 +156,13 @@ export function login(identifier: string, passkey: string) {
   });
 }
 
+export function loginWithWallet(walletAddress: string) {
+  return apiFetch<{ token: string; user: UserInfo & { walletAddress?: string } }>('/api/auth/wallet', {
+    method: 'POST',
+    body: JSON.stringify({ walletAddress }),
+  });
+}
+
 export function register(identifier: string, passkey: string, name?: string, origin?: string, role?: string) {
   return apiFetch<{ token: string; user: UserInfo }>('/api/auth/register', {
     method: 'POST',
@@ -228,17 +216,6 @@ export function terminateSession() {
   );
 }
 
-export function getPlans() {
-  return apiFetch<{ plans: Plan[] }>('/api/plans');
-}
-
-export function purchasePlan(planId: number, card: { number: string; expiry: string; cvv: string; name: string }) {
-  return apiFetch<PurchaseResult>('/api/plans/purchase', {
-    method: 'POST',
-    body: JSON.stringify({ planId, card }),
-  });
-}
-
 export interface AiChatMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -247,7 +224,7 @@ export interface AiChatMessage {
 export function aiChat(message: string, history: AiChatMessage[], xPaySignature?: string) {
   const headers: Record<string, string> = {};
   if (xPaySignature) headers['x-pay-signature'] = xPaySignature;
-  return apiFetch<{ ok: boolean; reply: string; credits: number }>('/api/ai/chat', {
+  return apiFetch<{ ok: boolean; reply: string; cost: number }>('/api/ai/chat', {
     method: 'POST',
     headers,
     body: JSON.stringify({ message, history }),

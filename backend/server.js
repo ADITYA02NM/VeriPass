@@ -15,8 +15,7 @@ import QRCode from 'qrcode';
 import {
   db, getProductByCode, getCheckpoints, getUsage, bumpUsage, FREE_SCAN_LIMIT,
   addBookmark, removeBookmark, isBookmarked, getBookmarkedProductIds, resetOwnerData, resetDemoProductSignatures,
-  getCredits, consumeCredit, consumeCredits, addCredits, getPlans, getPlanById,
-  recordPlanPurchase, getPlanPurchases, getAgentUsage,
+  getAgentUsage,
 } from './db.js';
 import { X402, paymentChallenge, simulateAlgorandPayment, verifyPaymentProof } from './x402.js';
 import { signToken, auth as _auth, ownerKey as _ownerKey } from './auth.js';
@@ -121,6 +120,34 @@ app.post('/api/auth/login', async (c) => {
   });
 });
 
+// Wallet-based login — Pera WalletConnect / embedded wallet
+app.post('/api/auth/wallet', async (c) => {
+  const { walletAddress } = await c.req.json().catch(() => ({})) || {};
+  if (!walletAddress || typeof walletAddress !== 'string') return c.json({ error: 'walletAddress required' }, 400);
+  const addr = walletAddress.trim();
+  if (addr.length < 32 || addr.length > 64) return c.json({ error: 'invalid wallet address' }, 400);
+  // Find existing user by wallet_address
+  let user = db.prepare('SELECT * FROM users WHERE wallet_address = ?').get(addr);
+  if (!user) {
+    // Auto-create a new user with this wallet
+    const id = `wallet-${addr.slice(0, 8).toLowerCase()}`;
+    const displayName = `Wallet ${addr.slice(0, 6)}…${addr.slice(-4)}`;
+    try {
+      db.prepare('INSERT INTO users (identifier, passkey, name, role, origin, wallet_address) VALUES (?,?,?,?,?,?)')
+        .run(id, 'wallet-session', displayName, 'User', 'Pera Wallet', addr);
+      user = db.prepare('SELECT * FROM users WHERE identifier = ?').get(id);
+    } catch {
+      return c.json({ error: 'failed to create wallet user' }, 500);
+    }
+  }
+  // Reset free scan tokens on wallet login
+  db.prepare('INSERT INTO usage (owner_key, used) VALUES (?,0) ON CONFLICT(owner_key) DO UPDATE SET used = 0').run(user.identifier);
+  return c.json({
+    token: signToken(user.identifier, user.role),
+    user: { identifier: user.identifier, name: user.name, role: user.role, origin: user.origin, walletAddress: user.wallet_address },
+  });
+});
+
 // Register a new entity — creates a real row in the users table (DB-backed login/register)
 app.post('/api/auth/register', async (c) => {
   const { identifier, passkey, name, role, origin } = await c.req.json().catch(() => ({})) || {};
@@ -143,7 +170,7 @@ app.post('/api/auth/register', async (c) => {
 app.get('/api/me', async (c) => {
   const u = auth(c);
   if (!u) return c.json({ error: 'unauthorized' }, 401);
-  const user = db.prepare('SELECT identifier, name, role, origin, credits FROM users WHERE identifier = ?').get(u.identifier);
+  const user = db.prepare('SELECT identifier, name, role, origin, wallet_address FROM users WHERE identifier = ?').get(u.identifier);
   if (!user) return c.json({ error: 'unauthorized' }, 401);
   return c.json({ user });
 });
@@ -202,17 +229,9 @@ app.get('/api/verify/:code', async (c) => {
     return c.json(productPayload(product, cps, used + 1));
   }
 
-  // Paid tier: consume 1 purchased credit per verification (1 credit = 1 use)
-  const credits = getCredits(ok);
-  if (credits > 0) {
-    consumeCredit(ok);
-    const cps = getCheckpoints(product.id);
-    return c.json({ ...productPayload(product, cps, used), credits: credits - 1 });
-  }
-
-  // Charged: HTTP 402 + x402 challenge (Algorand)
+  // Charged: HTTP 402 + x402 challenge (Algorand) — pure pay-per-use, no credits
   return c.json({
-    error: 'Free tier exhausted and no credits left. Buy a plan or pay with Algorand (x402) to unlock this verification report.',
+    error: 'Free tier exhausted. Pay with Algorand (x402) to unlock this verification report.',
     x402: paymentChallenge(),
   }, 402);
 });
@@ -221,39 +240,10 @@ app.get('/api/verify/:code', async (c) => {
 app.get('/api/usage', async (c) => {
   const ok = ownerKey(c);
   const used = getUsage(ok);
-  return c.json({ ownerKey: ok, freeLimit: FREE_SCAN_LIMIT, used, charged: used >= FREE_SCAN_LIMIT, priceAlgo: X402.amount, credits: getCredits(ok) });
+  return c.json({ ownerKey: ok, freeLimit: FREE_SCAN_LIMIT, used, charged: used >= FREE_SCAN_LIMIT, priceAlgo: X402.amount });
 });
 
-// ================= PLANS (business model: 1 credit = 1 use) =================
-app.get('/api/plans', async (c) => {
-  return c.json({ plans: getPlans() });
-});
-
-app.post('/api/plans/purchase', async (c) => {
-  const u = auth(c);
-  if (!u) return c.json({ error: 'unauthorized' }, 401);
-  const { planId, card } = await c.req.json().catch(() => ({})) || {};
-  const plan = getPlanById(Number(planId));
-  if (!plan) return c.json({ error: 'Unknown plan' }, 404);
-  // demo payment: accept any well-formed card (no real charge)
-  const cardNumber = String(card?.number || '').replace(/\s+/g, '');
-  if (cardNumber.length < 12 || !/^\d+$/.test(cardNumber)) {
-    return c.json({ error: 'Enter a valid card number (demo — no real charge)' }, 400);
-  }
-  const last4 = cardNumber.slice(-4);
-  addCredits(u.identifier, plan.credits);
-  recordPlanPurchase(u.identifier, plan, last4);
-  return c.json({
-    ok: true,
-    plan: plan.name,
-    creditsAdded: plan.credits,
-    credits: getCredits(u.identifier),
-    amountInr: plan.price_inr,
-    cardLast4: last4,
-  });
-});
-
-// ================= AI ASSISTANT (agentic, paid: 1 credit = 1 query, else x402) =================
+// ================= AI ASSISTANT (agentic, paid via x402) =================
 registerAiRoutes(app, auth);
 registerAgentRoutes(app);
 
@@ -352,9 +342,7 @@ app.post('/api/admin/reset', async (c) => {
   const owners = db.prepare('SELECT identifier FROM users').all();
   for (const o of owners) resetOwnerData(o.identifier);
   resetDemoProductSignatures();
-  // FULL reset: plan credits + credits of every person, plan purchases, Algorand payments
-  db.prepare('UPDATE users SET credits = 0').run();
-  db.prepare('DELETE FROM plan_purchases').run();
+  // FULL reset: Algorand payments + user data
   db.prepare('DELETE FROM payments').run();
   return c.json({ ok: true, reset: true, owners: owners.length });
 });
@@ -378,7 +366,7 @@ app.post('/api/spending/limit', async (c) => {
   if (!ok) return c.json({ error: 'unauthorized' }, 401);
   const body = await c.req.json().catch(() => ({})) || {};
   const limit = Number(body.limit);
-  if (!limit || limit <= 0 || limit > 1) return c.json({ error: 'limit must be between 0 and 1 ALGO' }, 400);
+  if (!limit || limit <= 0 || limit > 99) return c.json({ error: 'limit must be between 0 and 99 ALGO' }, 400);
   db.prepare('UPDATE users SET spend_limit = ? WHERE identifier = ?').run(limit, ok);
   return c.json({ ok: true, spendLimit: limit });
 });
@@ -417,12 +405,11 @@ function tbl(rows, headers) {
 
 app.get('/dashboard', async (c) => {
   const payments = db.prepare('SELECT * FROM payments ORDER BY id DESC LIMIT 40').all();
-  const purchases = getPlanPurchases().slice(0, 40);
   const checkpoints = db.prepare(
     `SELECT c.*, p.code AS pcode FROM checkpoints c JOIN products p ON p.id = c.product_id ORDER BY c.id DESC LIMIT 60`
   ).all();
   const usageRows = db.prepare('SELECT owner_key, used FROM usage ORDER BY owner_key').all();
-  const users = db.prepare('SELECT identifier, name, role, credits FROM users ORDER BY id').all();
+  const users = db.prepare('SELECT identifier, name, role FROM users ORDER BY id').all();
   const products = db.prepare('SELECT * FROM products ORDER BY id').all();
 
   const payRows = payments.map((p) => [
@@ -430,21 +417,16 @@ app.get('/dashboard', async (c) => {
     `<b>${sha(p.txid + p.owner_key + p.amount).slice(0, 16)}</b>`,
     p.owner_key, p.amount, p.network, p.round ?? '—', p.created_at,
   ]);
-  const purchaseRows = purchases.map((p) => [
-    p.owner_key, p.plan_name, p.credits, `₹${p.amount_inr}`, `•••• ${p.card_last4}`, p.created_at,
-  ]);
   const cpRows = checkpoints.map((c) => [
     `<code title="${sha(`${c.pcode}|${c.kind}|${c.signed_by || 'none'}|${c.timestamp}`)}">${sha(`${c.pcode}|${c.kind}|${c.signed_by || 'none'}|${c.timestamp}`).slice(0, 16)}</code>`,
     c.pcode, c.kind, c.signed_by || '<i>—</i>', c.signer_role || '<i>—</i>', c.timestamp,
   ]);
   const usageHtml = usageRows.map((r) => {
-    const credits = db.prepare('SELECT credits FROM users WHERE identifier = ?').get(r.owner_key)?.credits ?? 0;
     return `<tr><td style="padding:8px;border-bottom:1px solid var(--line)">${r.owner_key}</td>
-      <td style="padding:8px;border-bottom:1px solid var(--line)">${r.used}/${FREE_SCAN_LIMIT} free</td>
-      <td style="padding:8px;border-bottom:1px solid var(--line)">${credits} credits</td></tr>`;
+      <td style="padding:8px;border-bottom:1px solid var(--line)">${r.used}/${FREE_SCAN_LIMIT} free</td></tr>`;
   }).join('');
   const userRows = users.map((u) => [
-    u.identifier, u.name, u.role, u.credits ?? 0,
+    u.identifier, u.name, u.role,
   ]);
   const productRows = products.map((p) => {
     const cps = getCheckpoints(p.id);
@@ -458,7 +440,7 @@ app.get('/dashboard', async (c) => {
   const agentUsage = getAgentUsage();
   const agentRows = AGENTS.map((a) => {
     const u = agentUsage.find((x) => x.agent_id === a.id);
-    return [a.name, `${a.priceAlgo} ALGO`, `${a.credits} cr`, u?.calls ?? 0, u?.credits_consumed ?? 0];
+    return [a.name, `${a.priceAlgo} ALGO`, u?.calls ?? 0];
   });
 
   return c.html(`<!doctype html><html><head><meta charset="utf-8"><title>VeriPass Dashboard — Admin Proof Panel</title>
@@ -482,24 +464,21 @@ app.get('/dashboard', async (c) => {
   </div>
   <div class="sum">
     <div>💸 <span>payments</span>${payments.length}</div>
-    <div>💳 <span>plan purchases</span>${purchases.length}</div>
     <div>✍️ <span>signatures</span>${checkpoints.length}</div>
     <div>👤 <span>users</span>${users.length}</div>
     <div>📦 <span>products</span>${products.length}</div>
   </div>
 
   <div class="sec"><h2>💸 Algorand x402 payments (${payments.length}) — txid + proof hash</h2>${tbl(payRows, ['txid', 'proof hash', 'owner', 'amount', 'network', 'round', 'time'])}</div>
-  <div class="sec"><h2>💳 Plan purchases — credits (${purchases.length})</h2>${tbl(purchaseRows, ['owner', 'plan', 'credits', 'paid', 'card', 'time'])}</div>
   <div class="sec"><h2>✍️ Signatures / checkpoints (${checkpoints.length}) — chain-of-custody hashes</h2>${tbl(cpRows, ['hash', 'product', 'kind', 'signed_by', 'role', 'time'])}</div>
-  <div class="sec"><h2>🔢 Usage per person (free tier + credits)</h2>
+  <div class="sec"><h2>🔢 Usage per person (free tier)</h2>
     <table style="width:100%;border-collapse:collapse;font-size:14px;font-family:monospace">
       <tr><th style="text-align:left;padding:8px;border-bottom:3px solid var(--ink);background:var(--ink);color:#fff">owner</th>
-      <th style="text-align:left;padding:8px;border-bottom:3px solid var(--ink);background:var(--ink);color:#fff">free</th>
-      <th style="text-align:left;padding:8px;border-bottom:3px solid var(--ink);background:var(--ink);color:#fff">plan credits</th></tr>
+      <th style="text-align:left;padding:8px;border-bottom:3px solid var(--ink);background:var(--ink);color:#fff">free</th></tr>
       ${usageHtml}
     </table></div>
-  <div class="sec"><h2>🤖 Agentic AI — 8 specialist agents · prices + usage</h2>${tbl(agentRows, ['agent', 'price', 'credits', 'calls', 'credits consumed'])}</div>
-  <div class="sec"><h2>👤 Users</h2>${tbl(userRows, ['identifier', 'name', 'role', 'credits'])}</div>
+  <div class="sec"><h2>🤖 Agentic AI — 7 specialist agents · prices + usage</h2>${tbl(agentRows, ['agent', 'price', 'calls'])}</div>
+  <div class="sec"><h2>👤 Users</h2>${tbl(userRows, ['identifier', 'name', 'role'])}</div>
   <div class="sec"><h2>📦 Products (${products.length})</h2>${tbl(productRows, ['code', 'verdict', 'signatures', 'flags'])}</div>
   </body></html>`);
 });

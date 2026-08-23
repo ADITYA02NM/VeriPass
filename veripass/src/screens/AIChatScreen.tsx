@@ -16,10 +16,8 @@ const SUGGESTIONS = [
 ];
 
 /**
- * VeriPass AI — agentic orchestrator managing 8 specialist agents.
- * COST: 3–5 credits per question (0.003–0.005 ALGO via x402) depending on the
- * agent used. Credits are consumed first; when they run out the server answers
- * 402 with an x402 challenge until a valid X-Pay-Signature is presented.
+ * VeriPass AI — agentic orchestrator managing 7 specialist agents.
+ * COST: 0.003–0.005 ALGO per question via x402 pay-per-use (direct Algorand payment).
  */
 export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) => {
   const [messages, setMessages] = useState<AiChatMessage[]>([]);
@@ -27,14 +25,10 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
   const [thinking, setThinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
-  const [credits, setCredits] = useState(0);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
   useEffect(() => {
     getUsage()
-      .then((u: UsageInfo) => {
-        setUsage(u);
-        setCredits(u?.credits ?? 0);
-      })
+      .then((u: UsageInfo) => setUsage(u))
       .catch(() => {});
   }, []);
 
@@ -53,11 +47,9 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
     try {
       const res = await aiChat(trimmed, history);
       setMessages((m) => [...m, { role: 'assistant', content: res.reply }]);
-      // refresh usage after successful call
-      getUsage().then((u: UsageInfo) => { setUsage(u); setCredits(u?.credits ?? 0); }).catch(() => {});
     } catch (e) {
       if (e instanceof ApiError && e.status === 402) {
-        setError('NOT ENOUGH CREDITS — BUY A PLAN TO CONTINUE USING AI');
+        setError('PAYMENT REQUIRED — 0.003–0.005 ALGO via x402 Algorand payment to use AI');
       } else {
         setError(e instanceof ApiError ? e.message : 'AI SERVICE ERROR — TRY AGAIN');
       }
@@ -81,7 +73,7 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[var(--vp-cyan)]">auto_awesome</span>
             <span className="font-pixel text-[14px] uppercase tracking-wider">
-              {user ? user.identifier : 'guest'} · {credits} CREDITS · 3–5 / QUESTION
+              {user ? user.identifier : 'guest'} · x402 PAY-PER-USE · 0.003–0.005 ALGO/QUESTION
             </span>
           </div>
         </section>
@@ -93,8 +85,8 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
               <span className="material-symbols-outlined text-[16px] text-[var(--vp-ink-text)]">api</span>
               <span className="font-pixel text-[12px] uppercase tracking-wider text-[var(--vp-ink-text)]">
                 {Math.max(0, (usage?.freeLimit ?? 3) - (usage?.used ?? 0)) > 0
-                  ? `${Math.max(0, (usage?.freeLimit ?? 3) - (usage?.used ?? 0))} FREE LEFT`
-                  : `0 FREE · ${usage?.credits ?? 0} CREDITS REMAIN`}
+                  ? `${Math.max(0, (usage?.freeLimit ?? 3) - (usage?.used ?? 0))} FREE SCANS LEFT`
+                  : 'ALGO PAY-PER-USE · x402'}
               </span>
             </div>
             <div className="h-2 w-24 bg-[var(--vp-container-low)] border border-[var(--vp-ink)]/30">
@@ -104,7 +96,7 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
               />
             </div>
             <span className="font-pixel text-[12px] uppercase tracking-wider text-[var(--vp-saffron-text)]">
-              {usage?.credits ?? 0} CREDITS
+              x402
             </span>
           </section>
         )}
@@ -118,9 +110,9 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
                   Ask me anything about your supply chain
                 </p>
                 <p className="text-[14px] text-[var(--vp-muted)] mt-1">
-I manage 8 specialist agents (Inventory, Passport, Market, Usage, Proof, Guide,
-Search, Compare). Ask anything — 3–5 credits per question (0.003–0.005 ALGO)
-depending on the agent used.
+I manage 7 specialist agents (Inventory, Passport, Market, Usage, Proof,
+Search, Compare). Ask anything — 0.003–0.005 ALGO per question
+via x402 Algorand pay-per-use.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -163,16 +155,6 @@ depending on the agent used.
         {error && (
           <div className="flex flex-col gap-2">
             <p className="font-pixel text-[13px] text-[var(--vp-magenta-text)] uppercase tracking-wider">{error}</p>
-            {error.includes('NOT ENOUGH CREDITS') && (
-              <button
-                type="button"
-                onClick={() => onNavigate('pricing', 'push')}
-                className="self-start font-pixel text-[13px] uppercase tracking-wider border-2 border-[var(--vp-ink)] bg-[var(--vp-saffron)] text-[var(--vp-ink-text)] px-3 py-1.5 voxel-shadow-sm hover:bg-[#e8871f] cursor-pointer flex items-center gap-1"
-              >
-                <span className="material-symbols-outlined text-sm">shopping_cart</span>
-                VIEW PLANS
-              </button>
-            )}
           </div>
         )}
 

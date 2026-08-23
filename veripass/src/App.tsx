@@ -13,7 +13,7 @@ import { DigitalSignaturesScreen } from './screens/DigitalSignaturesScreen';
 import { RegisterScreen } from './screens/RegisterScreen';
 import { PasswordResetScreen } from './screens/PasswordResetScreen';
 import { PaymentScreen } from './screens/PaymentScreen';
-import { PricingScreen } from './screens/PricingScreen';
+
 import { AIChatScreen } from './screens/AIChatScreen';
 import { WalletScreen } from './screens/WalletScreen';
 
@@ -142,8 +142,6 @@ export default function App() {
         return <PasswordResetScreen onNavigate={handleNavigate} />;
       case 'payment':
         return <PaymentScreen onNavigate={handleNavigate} code={pendingCode} onPaid={handlePaid} />;
-      case 'pricing':
-        return <PricingScreen onNavigate={handleNavigate} user={user} />;
       case 'ai-chat':
         return <AIChatScreen onNavigate={handleNavigate} user={user} />;
       case 'wallet':

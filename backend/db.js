@@ -90,30 +90,10 @@ CREATE TABLE IF NOT EXISTS bookmarks (
   UNIQUE (owner_key, product_id)
 );
 
--- business model: plan catalog (1 credit = 1 use) + purchase ledger
-CREATE TABLE IF NOT EXISTS plans (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  name       TEXT UNIQUE NOT NULL,
-  credits    INTEGER NOT NULL,
-  price_inr  INTEGER NOT NULL,
-  tagline    TEXT
-);
-
-CREATE TABLE IF NOT EXISTS plan_purchases (
-  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  owner_key   TEXT NOT NULL,
-  plan_name   TEXT NOT NULL,
-  credits     INTEGER NOT NULL,
-  amount_inr  INTEGER NOT NULL,
-  card_last4  TEXT,
-  created_at  TEXT DEFAULT (datetime('now'))
-);
+-- plans + plan_purchases REMOVED: VeriPass is pure x402 pay-per-use (no credits)
 `);
 
-// migration: add credits column to users (existing DBs created before plans existed)
-try { db.exec('ALTER TABLE users ADD COLUMN credits INTEGER DEFAULT 0'); } catch (e) {
-  if (!String(e?.message || '').includes('duplicate column')) throw e;
-}
+// credits column REMOVED: pure x402 pay-per-use (no credits system)
 
 // migration: market price per product (for the AI market-price tool)
 try { db.exec('ALTER TABLE products ADD COLUMN market_price INTEGER DEFAULT 0'); } catch (e) {
@@ -259,22 +239,6 @@ function seed() {
     db.prepare('UPDATE users SET wallet_address = ? WHERE identifier = ? AND wallet_address IS NULL').run(addr, id);
   }
 
-  // plans catalog (business model: 1 credit = 1 use)
-  const plans = [
-    ['Starter 100', 100, 50, '100 credits — 100 verifications or 33 AI questions'],
-    ['Pro 200', 200, 120, '200 credits — most popular'],
-    ['Enterprise 300', 300, 190, '300 credits — full demo day'],
-  ];
-  for (const [name, credits, price, tagline] of plans) {
-    db.prepare('INSERT OR IGNORE INTO plans (name, credits, price_inr, tagline) VALUES (?,?,?,?)')
-      .run(name, credits, price, tagline);
-  }
-  // migration: enforce current pricing on existing rows (INSERT OR IGNORE won't update)
-  for (const [name, credits, price, tagline] of plans) {
-    db.prepare('UPDATE plans SET credits = ?, price_inr = ?, tagline = ? WHERE name = ?')
-      .run(credits, price, tagline, name);
-  }
-
   // demo bookmarks: pro/log/ret/ravi each have a few items in the vault, user stays EMPTY
   if (p1 && p2) {
     for (const owner of ['pro', 'log', 'ret', 'ravi']) {
@@ -347,42 +311,7 @@ export function resetDemoProductSignatures() {
       'Batch certified by QA — awaiting logistics shipment');
 }
 
-// ---------------- Business model: credits (1 credit = 1 use) ----------------
-export function getCredits(ownerKey) {
-  const row = db.prepare('SELECT credits FROM users WHERE identifier = ?').get(ownerKey);
-  return row ? (row.credits || 0) : 0;
-}
-
-export function consumeCredit(ownerKey) {
-  const r = db.prepare('UPDATE users SET credits = credits - 1 WHERE identifier = ? AND credits > 0').run(ownerKey);
-  return r.changes > 0;
-}
-
-export function consumeCredits(ownerKey, n) {
-  const r = db.prepare('UPDATE users SET credits = credits - ? WHERE identifier = ? AND credits >= ?').run(n, ownerKey, n);
-  return r.changes > 0;
-}
-
-export function addCredits(ownerKey, amount) {
-  db.prepare('UPDATE users SET credits = credits + ? WHERE identifier = ?').run(amount, ownerKey);
-}
-
-export function getPlans() {
-  return db.prepare('SELECT * FROM plans ORDER BY credits ASC').all();
-}
-
-export function getPlanById(id) {
-  return db.prepare('SELECT * FROM plans WHERE id = ?').get(id);
-}
-
-export function recordPlanPurchase(ownerKey, plan, cardLast4) {
-  db.prepare('INSERT INTO plan_purchases (owner_key, plan_name, credits, amount_inr, card_last4) VALUES (?,?,?,?,?)')
-    .run(ownerKey, plan.name, plan.credits, plan.price_inr, cardLast4);
-}
-
-export function getPlanPurchases() {
-  return db.prepare('SELECT * FROM plan_purchases ORDER BY id DESC').all();
-}
+// credits/plans REMOVED: pure x402 pay-per-use — every action = direct ALGO payment
 
 export function recordAgentUse(agentId, credits) {
   db.prepare(

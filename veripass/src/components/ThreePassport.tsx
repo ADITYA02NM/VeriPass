@@ -31,7 +31,11 @@ export const ThreePassport: React.FC = () => {
 
     // Back cover
     const backCoverGeom = new THREE.BoxGeometry(2.5, 3.5, 0.05);
-    const backCoverMat = new THREE.MeshPhongMaterial({ color: deepBlue });
+    const backCoverMat = new THREE.MeshPhongMaterial({
+      color: deepBlue,
+      shininess: 80,
+      specular: 0x222244,
+    });
     const backCover = new THREE.Mesh(backCoverGeom, backCoverMat);
     backCover.position.z = -0.15;
     passportGroup.add(backCover);
@@ -39,13 +43,22 @@ export const ThreePassport: React.FC = () => {
     // Front Cover Group (Pivot at spine)
     const frontCoverGroup = new THREE.Group();
     const frontCoverGeom = new THREE.BoxGeometry(2.5, 3.5, 0.05);
-    const frontCoverMat = new THREE.MeshPhongMaterial({ color: deepBlue });
+    const frontCoverMat = new THREE.MeshPhongMaterial({
+      color: deepBlue,
+      shininess: 80,
+      specular: 0x222244,
+    });
     const frontCover = new THREE.Mesh(frontCoverGeom, frontCoverMat);
     frontCover.position.x = 1.25;
 
-    // Emblem on Front Cover
+    // Emblem on Front Cover — with glow
     const emblemGeom = new THREE.BoxGeometry(0.8, 0.8, 0.02);
-    const emblemMat = new THREE.MeshPhongMaterial({ color: saffron });
+    const emblemMat = new THREE.MeshPhongMaterial({
+      color: saffron,
+      emissive: saffron,
+      emissiveIntensity: 0.4,
+      shininess: 100,
+    });
     const emblem = new THREE.Mesh(emblemGeom, emblemMat);
     emblem.position.set(1.25, 0.5, 0.04);
     frontCoverGroup.add(emblem);
@@ -54,14 +67,29 @@ export const ThreePassport: React.FC = () => {
     frontCoverGroup.position.x = -1.25;
     passportGroup.add(frontCoverGroup);
 
-    // Turning Pages
+    // Turning Pages — with subtle horizontal line texture
     const pages: THREE.Group[] = [];
     for (let i = 0; i < 5; i++) {
       const pageGroup = new THREE.Group();
       const pageGeom = new THREE.BoxGeometry(2.4, 3.4, 0.01);
-      const pageMat = new THREE.MeshPhongMaterial({ color: cream, side: THREE.DoubleSide });
+      const pageMat = new THREE.MeshPhongMaterial({
+        color: cream,
+        side: THREE.DoubleSide,
+        shininess: 20,
+        specular: 0x333322,
+      });
       const page = new THREE.Mesh(pageGeom, pageMat);
       page.position.x = 1.2;
+
+      // Add subtle line decorations
+      const lineGeom = new THREE.BoxGeometry(1.8, 0.015, 0.001);
+      const lineMat = new THREE.MeshPhongMaterial({ color: 0xddddcc, transparent: true, opacity: 0.3 });
+      for (let l = 0; l < 6; l++) {
+        const line = new THREE.Mesh(lineGeom, lineMat);
+        line.position.set(1.2, 0.6 - l * 0.35, 0.006);
+        pageGroup.add(line);
+      }
+
       pageGroup.add(page);
       pageGroup.position.x = -1.2;
       pageGroup.position.z = -0.1 + i * 0.02;
@@ -71,16 +99,21 @@ export const ThreePassport: React.FC = () => {
 
     scene.add(passportGroup);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    // Warm ambient + key light + rim light
+    const ambientLight = new THREE.AmbientLight(0xfff5e6, 0.85);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0xffffff, 1.2);
-    pointLight.position.set(5, 5, 5);
-    scene.add(pointLight);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    keyLight.position.set(3, 4, 5);
+    scene.add(keyLight);
 
-    const pointLight2 = new THREE.PointLight(0x00e5ff, 0.4);
-    pointLight2.position.set(-5, -5, 2);
-    scene.add(pointLight2);
+    const fillLight = new THREE.PointLight(0xffffff, 0.3);
+    fillLight.position.set(-4, 2, 3);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.PointLight(0x00e5ff, 0.25);
+    rimLight.position.set(-5, -3, 2);
+    scene.add(rimLight);
 
     camera.position.z = 7.5;
 
@@ -92,14 +125,21 @@ export const ThreePassport: React.FC = () => {
       return t * t * (3 - 2 * t);
     };
 
+    // Gentle drift using separate frequencies for organic feel
+    const driftX = (time: number) => Math.sin(time * 0.3) * 0.08 + Math.sin(time * 0.17) * 0.03;
+    const driftY = (time: number) => Math.sin(time * 0.5) * 0.05 + Math.cos(time * 0.23) * 0.02;
+
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
       const time = clock.getElapsedTime();
 
-      // Gentle ambient float & tilt (slow, eased)
-      passportGroup.position.y = Math.sin(time * 0.7) * 0.06;
-      passportGroup.rotation.y = Math.sin(time * 0.35) * 0.12;
+      // Gentle ambient float & tilt (organic drift)
+      passportGroup.position.y = driftY(time);
+      passportGroup.rotation.y = driftX(time);
       passportGroup.rotation.x = 0.18 + Math.sin(time * 0.25) * 0.04;
+
+      // Emblem glow pulsing
+      emblemMat.emissiveIntensity = 0.3 + Math.sin(time * 1.2) * 0.15;
 
       // Open/close cycle: ease open → hold open → ease shut
       const t = (Math.sin(time * 0.5) + 1) / 2; // 0 → 1 → 0
