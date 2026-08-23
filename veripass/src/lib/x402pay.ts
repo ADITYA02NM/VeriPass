@@ -61,5 +61,6 @@ export async function autoX402Pay(
 
   // ---- Standard user: server-side mnemonic signing ----
   const result = await payX402('ai');
-  return { xPaySignature: result.xPaySignature, txId: result.txId, amount: amountAlgo };
+  // Use the ACTUAL amount the server charged (source of truth), not our estimate.
+  return { xPaySignature: result.xPaySignature, txId: result.txId, amount: result.amount };
 }

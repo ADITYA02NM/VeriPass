@@ -95,6 +95,7 @@ async function realAlgorandPayment(ownerKey, amount = X402.amount) {
     receiver: PLATFORM_RECEIVER,  // platform receiver takes fees
     amount: microAlgos,
     suggestedParams: params,
+    note: new TextEncoder().encode('VeriPass product verification report (x402 · Algorand)'),
   });
   const signed = txn.signTxn(wallet.sk);
   const sent = await algod.sendRawTransaction(signed).do();

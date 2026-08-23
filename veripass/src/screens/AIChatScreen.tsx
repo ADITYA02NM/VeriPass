@@ -91,7 +91,7 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
         if (e instanceof ApiError && e.status === 402) {
           setPaying(true);
           try {
-            const payRes = await autoX402Pay(user?.walletAddress, '0.005');
+            const payRes = await autoX402Pay(user?.walletAddress, '0.003');
             paidAmt = payRes.amount;
             res = await aiChat(trimmed, history);
           } finally {
@@ -133,7 +133,7 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[var(--vp-cyan)]">auto_awesome</span>
             <span className="font-pixel text-[14px] uppercase tracking-wider">
-              {user ? user.identifier : 'guest'} · x402 AUTO-PAY · ≤0.005 ALGO/QUESTION
+              {user ? user.identifier : 'guest'} · x402 AUTO-PAY · 0.003 ALGO/QUESTION
             </span>
           </div>
         </section>
@@ -172,7 +172,7 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
                 <p className="text-[14px] text-[var(--vp-muted)] mt-1">
                   I manage 7 specialist agents (Inventory, Passport, Market, Usage, Proof,
                   Search, Compare). Payments happen automatically via x402 — no prompts,
-                  just answers. Max 0.005 ALGO per question.
+                  just answers. 0.003 ALGO per question.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
