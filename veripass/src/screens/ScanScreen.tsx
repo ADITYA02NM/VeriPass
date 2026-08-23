@@ -207,7 +207,7 @@ export const ScanScreen: React.FC<ScanScreenProps> = ({
     } catch (e) {
       if (e instanceof ApiError && e.status === 402) {
         setFreeTierExhausted(true);
-        setError('FREE TIER EXHAUSTED — BUY A PLAN TO CONTINUE VERIFYING');
+        setError('FREE TIER EXHAUSTED — PAY 0.002 ALGO VIA x402 TO CONTINUE');
       } else if (e instanceof ApiError && e.status === 404) {
         setError('PRODUCT NOT FOUND — CHECK THE CODE AND TRY AGAIN');
         setProduct(null);
@@ -294,10 +294,10 @@ export const ScanScreen: React.FC<ScanScreenProps> = ({
                 </span>
                 <span className={`font-pixel text-[15px] ${freeTierExhausted ? 'text-[var(--vp-saffron-text)]' : 'text-[var(--vp-outline)]'}`}>
                   {freeTierExhausted
-                    ? `${usage?.credits ?? 0} CREDITS REMAINING`
+                    ? 'x402 ALGORAND PAYMENT REQUIRED'
                     : remaining > 0
-                    ? `${remaining} FREE LEFT · ${usage?.credits ?? 0} CREDITS`
-                    : `0 FREE · ${usage?.credits ?? 0} CREDITS REMAIN`}
+                    ? `${remaining} FREE LEFT · 0.002 ALGO/SCAN`
+                    : '0 FREE · 0.002 ALGO/SCAN'}
                 </span>
               </div>
               <div className="mt-1.5 h-3 bg-[var(--vp-container-low)] border border-[var(--vp-ink)]/30 overflow-hidden">
@@ -308,7 +308,7 @@ export const ScanScreen: React.FC<ScanScreenProps> = ({
               </div>
               <p className={`font-pixel text-[12px] mt-1 uppercase tracking-wider ${freeTierExhausted ? 'text-[var(--vp-cream-text)]/70' : 'text-[var(--vp-outline)]'}`}>
                 {freeTierExhausted
-                  ? 'Purchase a plan to continue — credits never expire'
+                  ? 'Pay 0.002 ALGO per scan via x402 Algorand payment'
                   : `First ${freeLimit} verifications free · x402 protocol · Algorand`}
               </p>
             </div>
@@ -316,11 +316,11 @@ export const ScanScreen: React.FC<ScanScreenProps> = ({
           {freeTierExhausted && (
             <button
               type="button"
-              onClick={() => onNavigate('pricing', 'push')}
+              onClick={() => onNavigate('wallet', 'push')}
               className="shrink-0 bg-[var(--vp-saffron)] text-[var(--vp-ink-text)] font-pixel text-[17px] py-2 px-4 border-2 border-[var(--vp-ink)] voxel-shadow-sm voxel-btn-active flex items-center justify-center gap-2 transition-all hover:bg-[#e8871f] cursor-pointer"
             >
-              <span className="material-symbols-outlined text-lg">shopping_cart</span>
-              VIEW PLANS
+              <span className="material-symbols-outlined text-lg">account_balance_wallet</span>
+              PAY 0.002 ALGO
             </button>
           )}
         </section>

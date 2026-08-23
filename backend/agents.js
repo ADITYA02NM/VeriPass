@@ -88,18 +88,14 @@ async function serviceReportGenerate(keywords, researchType, marketData, news) {
   const marketLines = marketData.products
     .map((p) => `- ${p.code} ${p.name}: ${p.verdict} (score ${p.score}, ${p.signatures} signatures${p.fake ? ', ⚠FAKE' : ''})`)
     .join('\n');
-  const planLines = marketData.plans.map((p) => `- ${p.name}: ${p.credits} credits ₹${p.priceInr}`).join('\n');
   const newsLines = (news.headlines || []).map((h) => `- ${h}`).join('\n');
   const res = await ai.models.generateContent({
     model: MODEL,
     contents: `You are a supply-chain market research analyst. Research topic: "${keywords}" (type: ${researchType}).
-Compile a concise final report (max 220 words) with sections: MARKET SNAPSHOT (verdict mix from inventory), PRICE & PLANS (pricing context), NEWS WATCH (headlines), RECOMMENDATION (what a buyer should do).
+Compile a concise final report (max 220 words) with sections: MARKET SNAPSHOT (verdict mix from inventory), NEWS WATCH (headlines), RECOMMENDATION (what a buyer should do).
 
 INVENTORY:
 ${marketLines}
-
-PLANS:
-${planLines}
 
 HEADLINES (${news.source}):
 ${newsLines}`,

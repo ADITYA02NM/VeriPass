@@ -252,7 +252,7 @@ app.post('/api/x402/pay', async (c) => {
   const ok = ownerKey(c);
   const body = await c.req.json().catch(() => ({})) || {};
   const purpose = body.purpose || 'verify';
-  const amount = purpose === 'ai' ? '0.003' : X402.amount; // AI question = 3 credits = 0.003 ALGO
+  const amount = purpose === 'ai' ? '0.003' : X402.amount; // AI question = 0.003 ALGO
   const used = getUsage(ok);
   // Free-scan gate applies ONLY to verification reports ('verify').
   // AI Assistant and Agent services are pay-per-use (x402) — always payable.
