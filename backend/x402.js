@@ -3,8 +3,10 @@
  *
  * Per-user wallet payments: each user has their own funded wallet (from wallets.json).
  * Payments go FROM the user's wallet TO the platform receiver wallet.
- * FALLBACK: if the user wallet is unfunded or missing, we fall
- * back to a simulated local ledger (algorand-sim) so the demo never breaks.
+ * REAL ONLY: every payment is an actual on-chain TestNet transaction signed
+ * with the user's mnemonic. If the send fails it is retried up to 3 times;
+ * users without a funded mnemonic wallet get a clear error (link a wallet or
+ * connect Pera) instead of a fake simulated transaction.
  *
  * The x402 header protocol is identical in both modes:
  *   X-Pay-Provider: algorand
@@ -16,7 +18,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import algosdk from 'algosdk';
-import crypto from 'node:crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const WALLETS_FILE = path.join(__dirname, 'data', 'wallets.json');
@@ -27,7 +28,7 @@ const PLATFORM_RECEIVER = 'NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT
 
 export const X402 = {
   provider: 'algorand',
-  network: 'algorand-sim',
+  network: 'testnet-v1.0',
   amount: '0.002',                    // 0.002 ALGO per verification
   receiverAddress: PLATFORM_RECEIVER,
   description: 'VeriPass product verification report (x402 · Algorand)',
@@ -109,29 +110,41 @@ async function realAlgorandPayment(ownerKey, amount = X402.amount) {
   return { txId, sender: wallet.address, round, amount, network: 'testnet-v1.0' };
 }
 
-/** Simulated Algorand payment (local ledger fallback — demo never breaks). */
-function simulatedPayment(ownerKey, amount = X402.amount) {
-  const txId = 'SIM-' + crypto.randomUUID().slice(0, 12).toUpperCase();
-  const round = 26_500_000 + Math.floor(Math.random() * 100_000);
-  const sender = `DEMO-WALLET-${ownerKey.slice(0, 6).toUpperCase()}-${Math.floor(Math.random() * 9000 + 1000)}`;
-  db.prepare(
-    'INSERT INTO payments (txid, owner_key, amount, network, round, sender, receiver) VALUES (?,?,?,?,?,?,?)'
-  ).run(txId, ownerKey, amount, 'algorand-sim', round, sender, PLATFORM_RECEIVER);
-  return { txId, sender, round, amount, network: 'algorand-sim' };
-}
-
 /**
- * POST /api/x402/pay — real TestNet payment when possible, simulated otherwise.
- * (Export name kept for compatibility with server.js.)
+ * POST /api/x402/pay — REAL TestNet payment from the user's mnemonic wallet
+ * TO the merchant (platform receiver). No simulation, ever.
+ *   - On transient on-chain failures the send is RETRIED up to 3 times.
+ *   - Throws NO_WALLET when the user has no mnemonic wallet linked
+ *     (they should link one or pay client-side via Pera WalletConnect).
+ *   - Throws INSUFFICIENT_FUNDS when the wallet balance can't cover it.
  */
 export async function simulateAlgorandPayment(ownerKey, amount = X402.amount) {
+  let wallet = null;
   try {
-    const real = await realAlgorandPayment(ownerKey, amount);
-    if (real) return real;
+    wallet = getUserWallet(ownerKey);
   } catch (e) {
-    console.error('[x402] real TestNet payment failed, falling back to sim:', e.message);
+    console.error(`[x402] ${ownerKey}: wallet load failed:`, e.message);
   }
-  return simulatedPayment(ownerKey, amount);
+
+  if (!wallet || !wallet.mnemonic) {
+    throw new Error('NO_WALLET: no mnemonic wallet linked for this account — link a TestNet mnemonic (Register/Profile) or connect Pera Wallet.');
+  }
+
+  let lastErr = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const real = await realAlgorandPayment(ownerKey, amount);
+      if (real) return real;
+      // null = balance check failed inside → insufficient funds
+      throw new Error(`INSUFFICIENT_FUNDS: wallet ${wallet.address} cannot cover ${amount} ALGO + fee`);
+    } catch (e) {
+      if (e.message.startsWith('INSUFFICIENT_FUNDS')) throw e;
+      lastErr = e;
+      console.error(`[x402] ${ownerKey}: real payment attempt ${attempt}/3 failed: ${e.message}`);
+      if (attempt < 3) await new Promise((r) => setTimeout(r, 800));
+    }
+  }
+  throw new Error(`PAYMENT_FAILED: on-chain send failed after 3 attempts — ${lastErr?.message || 'unknown error'}`);
 }
 
 /**

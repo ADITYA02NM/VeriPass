@@ -481,7 +481,7 @@ app.get('/api/usage', async (c) => {
 registerAiRoutes(app, auth);
 registerAgentRoutes(app);
 
-// ================= x402: Algorand payment (real TestNet, sim fallback) =================
+// ================= x402: Algorand payment (REAL on-chain TestNet only) =================
 app.post('/api/x402/pay', async (c) => {
   const ok = ownerKey(c);
   const body = await c.req.json().catch(() => ({})) || {};
@@ -493,7 +493,24 @@ app.post('/api/x402/pay', async (c) => {
   if (purpose === 'verify' && used < FREE_SCAN_LIMIT) {
     return c.json({ error: 'You still have free scans left — no payment needed.' }, 409);
   }
-  const tx = await simulateAlgorandPayment(ok, amount);
+  let tx;
+  try {
+    tx = await simulateAlgorandPayment(ok, amount); // real on-chain send, 3 retries
+  } catch (e) {
+    const msg = e.message || '';
+    if (msg.startsWith('NO_WALLET')) {
+      return c.json({ error: msg.replace(/^NO_WALLET: /, ''), code: 'NO_WALLET' }, 422);
+    }
+    if (msg.startsWith('INSUFFICIENT_FUNDS')) {
+      return c.json({
+        error: msg.replace(/^INSUFFICIENT_FUNDS: /, ''),
+        code: 'INSUFFICIENT_FUNDS',
+        x402: paymentChallenge(amount),
+      }, 402);
+    }
+    console.error('[x402] payment failed:', msg);
+    return c.json({ error: 'Payment failed on-chain — please try again.', code: 'PAYMENT_FAILED' }, 502);
+  }
   const signaturePayload = b64url({ txId: tx.txId, sender: tx.sender, network: tx.network });
   return c.json({
     ok: true,
@@ -504,9 +521,7 @@ app.post('/api/x402/pay', async (c) => {
     sender: tx.sender,
     receiver: X402.receiverAddress,
     xPaySignature: signaturePayload, // send this as X-Pay-Signature header
-    note: tx.network === 'testnet-v1.0'
-      ? 'Real Algorand TestNet payment confirmed on-chain.'
-      : 'Simulated Algorand payment tx committed to local ledger (demo). TestNet-ready.',
+    note: 'Real Algorand TestNet payment confirmed on-chain.',
   });
 });
 function b64url(o) { return Buffer.from(JSON.stringify(o)).toString('base64url'); }

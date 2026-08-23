@@ -164,7 +164,9 @@ export function registerAgentRoutes(app) {
         budget: { maxCalls: MAX_CALLS, spent, remaining: MAX_CALLS - spent, pricePerCall: PRICE },
       });
     } catch (e) {
-      return c.json({ error: 'Agent error: ' + e.message }, 500);
+      const msg = e.message || '';
+      const isPayErr = /^(NO_WALLET|INSUFFICIENT_FUNDS|PAYMENT_FAILED)/.test(msg);
+      return c.json({ error: isPayErr ? msg.replace(/^[A-Z_]+: /, '') : 'Agent error: ' + msg, code: isPayErr ? msg.split(':')[0] : 'AGENT_ERROR' }, isPayErr ? 402 : 500);
     }
   });
 
@@ -176,7 +178,9 @@ export function registerAgentRoutes(app) {
       const result = await serviceMarketData();
       return c.json({ ok: true, agent: 'price-check', steps: [{ ...pay, result }], budget: { maxCalls: MAX_CALLS, spent: 1, remaining: MAX_CALLS - 1, pricePerCall: PRICE } });
     } catch (e) {
-      return c.json({ error: 'Agent error: ' + e.message }, 500);
+      const msg = e.message || '';
+      const isPayErr = /^(NO_WALLET|INSUFFICIENT_FUNDS|PAYMENT_FAILED)/.test(msg);
+      return c.json({ error: isPayErr ? msg.replace(/^[A-Z_]+: /, '') : 'Agent error: ' + msg, code: isPayErr ? msg.split(':')[0] : 'AGENT_ERROR' }, isPayErr ? 402 : 500);
     }
   });
 
@@ -203,7 +207,9 @@ export function registerAgentRoutes(app) {
       };
       return c.json({ ok: true, agent: 'info', steps: [{ ...pay, result }], budget: { maxCalls: MAX_CALLS, spent: 1, remaining: MAX_CALLS - 1, pricePerCall: PRICE } });
     } catch (e) {
-      return c.json({ error: 'Agent error: ' + e.message }, 500);
+      const msg = e.message || '';
+      const isPayErr = /^(NO_WALLET|INSUFFICIENT_FUNDS|PAYMENT_FAILED)/.test(msg);
+      return c.json({ error: isPayErr ? msg.replace(/^[A-Z_]+: /, '') : 'Agent error: ' + msg, code: isPayErr ? msg.split(':')[0] : 'AGENT_ERROR' }, isPayErr ? 402 : 500);
     }
   });
 
