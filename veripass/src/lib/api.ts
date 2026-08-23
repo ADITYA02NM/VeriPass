@@ -253,3 +253,36 @@ export function aiChat(message: string, history: AiChatMessage[], xPaySignature?
     body: JSON.stringify({ message, history }),
   });
 }
+
+export interface PaymentRecord {
+  txid: string;
+  amount: string;
+  network: string;
+  round: number;
+  sender: string;
+  receiver: string;
+  createdAt: string;
+  loraUrl: string | null;
+}
+
+export interface SpendingInfo {
+  spendLimit: number;
+  totalSpent: number;
+  walletAddress: string | null;
+  remaining: number;
+}
+
+export function getPayments() {
+  return apiFetch<{ payments: PaymentRecord[] }>('/api/payments');
+}
+
+export function getSpending() {
+  return apiFetch<SpendingInfo>('/api/spending');
+}
+
+export function setSpendingLimit(limit: number) {
+  return apiFetch<{ ok: boolean; spendLimit: number }>('/api/spending/limit', {
+    method: 'POST',
+    body: JSON.stringify({ limit }),
+  });
+}

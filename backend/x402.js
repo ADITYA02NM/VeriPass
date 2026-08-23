@@ -1,10 +1,9 @@
 /**
  * VeriPass — x402 (HTTP 402 Payment Required) on Algorand
  *
- * REAL TESTNET MODE: when backend/data/testnet-account.json exists (address +
- * mnemonic) and the account has a funded balance, payments are REAL Algorand
- * TestNet transactions via algosdk (Algonode public API).
- * FALLBACK: if the account file is missing or the wallet is unfunded, we fall
+ * Per-user wallet payments: each user has their own funded wallet (from wallets.json).
+ * Payments go FROM the user's wallet TO the platform receiver wallet.
+ * FALLBACK: if the user wallet is unfunded or missing, we fall
  * back to a simulated local ledger (algorand-sim) so the demo never breaks.
  *
  * The x402 header protocol is identical in both modes:
@@ -20,27 +19,38 @@ import algosdk from 'algosdk';
 import crypto from 'node:crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ACCOUNT_FILE = path.join(__dirname, 'data', 'testnet-account.json');
+const WALLETS_FILE = path.join(__dirname, 'data', 'wallets.json');
 const ALGOD_URL = 'https://testnet-api.algonode.cloud';
-const PAYMENT_MICRO_ALGOS = 1000; // 0.001 ALGO per verification report
+
+// Platform receiver wallet — all payments go TO this address
+const PLATFORM_RECEIVER = 'FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M';
 
 export const X402 = {
   provider: 'algorand',
   network: 'algorand-sim',
-  amount: '0.001',
-  receiverAddress: 'VERIPASS-DEMO-RECEIVER-7XQ2ALGO',
+  amount: '0.002',                    // 0.002 ALGO per verification
+  receiverAddress: PLATFORM_RECEIVER,
   description: 'VeriPass product verification report (x402 · Algorand)',
 };
 
-function loadAccount() {
+/** Load all wallets from wallets.json (platform-receiver + per-user wallets). */
+function loadWallets() {
   try {
-    const acc = JSON.parse(fs.readFileSync(ACCOUNT_FILE, 'utf8'));
-    if (!acc.address || !acc.mnemonic) return null;
-    return acc;
+    return JSON.parse(fs.readFileSync(WALLETS_FILE, 'utf8'));
   } catch (e) {
-    console.error('[x402] loadAccount failed:', e.message);
+    console.error('[x402] loadWallets failed:', e.message);
     return null;
   }
+}
+
+/** Resolve a user's wallet mnemonic from wallets.json by their identifier. */
+function getUserWallet(ownerKey) {
+  const wallets = loadWallets();
+  if (!wallets) return null;
+  const entry = wallets[ownerKey];
+  if (!entry || !entry.mnemonic) return null;
+  const acc = algosdk.mnemonicToSecretKey(entry.mnemonic);
+  return { address: acc.addr.toString(), mnemonic: entry.mnemonic, sk: acc.sk };
 }
 
 function b64url(obj) {
@@ -65,27 +75,27 @@ export function paymentChallenge(amount = X402.amount) {
   };
 }
 
-/** REAL Algorand TestNet payment — returns null when not possible. */
+/** REAL Algorand TestNet payment — FROM user wallet TO platform receiver. */
 async function realAlgorandPayment(ownerKey, amount = X402.amount) {
-  const acc = loadAccount();
-  if (!acc) return null;
+  const wallet = getUserWallet(ownerKey);
+  if (!wallet) return null;
 
   const algod = new algosdk.Algodv2('', ALGOD_URL, '');
 
   // Wallet must be funded (min balance + fee + the payment amount)
-  const acctInfo = await algod.accountInformation(acc.address).do();
+  const acctInfo = await algod.accountInformation(wallet.address).do();
   const micro = Number(acctInfo.amount || 0);
   const microAlgos = Math.round(parseFloat(amount) * 1_000_000);
   if (micro < microAlgos + 1000) return null; // unfunded → caller falls back to sim
 
   const params = await algod.getTransactionParams().do();
-const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-    sender: acc.address,
-    receiver: acc.address, // self-payment — proves the wallet can pay
-    amount: microAlgos, // e.g. 0.001 ALGO
+  const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+    sender: wallet.address,
+    receiver: PLATFORM_RECEIVER,  // platform receiver takes fees
+    amount: microAlgos,
     suggestedParams: params,
   });
-  const signed = txn.signTxn(algosdk.mnemonicToSecretKey(acc.mnemonic).sk);
+  const signed = txn.signTxn(wallet.sk);
   const sent = await algod.sendRawTransaction(signed).do();
   const txId = sent.txId ?? sent.txid; // algosdk v3 returns lowercase 'txid'
   await algosdk.waitForConfirmation(algod, txId, 10);
@@ -94,9 +104,9 @@ const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
 
   db.prepare(
     'INSERT INTO payments (txid, owner_key, amount, network, round, sender, receiver) VALUES (?,?,?,?,?,?,?)'
-  ).run(txId, ownerKey, amount, 'testnet-v1.0', round, acc.address, acc.address);
+  ).run(txId, ownerKey, amount, 'testnet-v1.0', round, wallet.address, PLATFORM_RECEIVER);
 
-  return { txId, sender: acc.address, round, amount, network: 'testnet-v1.0' };
+  return { txId, sender: wallet.address, round, amount, network: 'testnet-v1.0' };
 }
 
 /** Simulated Algorand payment (local ledger fallback — demo never breaks). */
@@ -106,7 +116,7 @@ function simulatedPayment(ownerKey, amount = X402.amount) {
   const sender = `DEMO-WALLET-${ownerKey.slice(0, 6).toUpperCase()}-${Math.floor(Math.random() * 9000 + 1000)}`;
   db.prepare(
     'INSERT INTO payments (txid, owner_key, amount, network, round, sender, receiver) VALUES (?,?,?,?,?,?,?)'
-  ).run(txId, ownerKey, amount, 'algorand-sim', round, sender, X402.receiverAddress);
+  ).run(txId, ownerKey, amount, 'algorand-sim', round, sender, PLATFORM_RECEIVER);
   return { txId, sender, round, amount, network: 'algorand-sim' };
 }
 

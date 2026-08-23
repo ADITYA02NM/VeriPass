@@ -21,7 +21,7 @@ if (!GEMINI_KEY) {
 const MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
 const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
 
-const PRICE = '0.001'; // ALGO per service call
+const PRICE = '0.003'; // ALGO per service call
 const MAX_CALLS = 3; // spend-policy guard: max paid service calls per run
 const RESEARCH_TYPES = ['Balanced', 'Market-Focused', 'News-Focused', 'Deep Dive'];
 
@@ -261,11 +261,11 @@ export function registerAgentRoutes(app) {
 <body>
 <div class="wrap">
   <h1>🤖 VeriPass — Agent Network Monitor</h1>
-  <h2>x402 agentic payments · agents pay 0.001 ALGO per service · spend-policy guard before every payment</h2>
+  <h2>x402 agentic payments · agents pay 0.003 ALGO per service · spend-policy guard before every payment</h2>
 
   <div class="sum">
     <div class="card"><div class="n">3</div><div class="l">priced services</div></div>
-    <div class="card"><div class="n">0.001</div><div class="l">ALGO per call</div></div>
+    <div class="card"><div class="n">0.003</div><div class="l">ALGO per call</div></div>
     <div class="card"><div class="n">3</div><div class="l">max calls / run</div></div>
     <div class="card"><div class="n">13</div><div class="l">products monitored</div></div>
   </div>
@@ -305,7 +305,7 @@ export function registerAgentRoutes(app) {
 
   <div class="sec">
     <h2>💰 Funding</h2>
-    <p style="font-size:14px">Agents pay 0.001 ALGO per service on Algorand (simulated ledger in demo mode). For real TestNet ALGO, fund your account with <a href="https://lora.algokit.io/testnet/fund" target="_blank"><b>Lora — AlgoKit testnet faucet</b></a> (requires AlgoKit login).</p>
+    <p style="font-size:14px">Agents pay 0.003 ALGO per service on Algorand (simulated ledger in demo mode). For real TestNet ALGO, fund your account with <a href="https://lora.algokit.io/testnet/fund" target="_blank"><b>Lora — AlgoKit testnet faucet</b></a> (requires AlgoKit login).</p>
     <a class="btn" href="https://lora.algokit.io/testnet/fund" target="_blank">Fund with Lora →</a>
     <a class="btn" href="/dashboard" style="margin-left:8px">📊 Admin Dashboard</a>
     <a class="btn" href="/demo" style="margin-left:8px">🧪 Judge Demo</a>

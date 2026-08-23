@@ -119,6 +119,21 @@ try { db.exec('ALTER TABLE users ADD COLUMN credits INTEGER DEFAULT 0'); } catch
 try { db.exec('ALTER TABLE products ADD COLUMN market_price INTEGER DEFAULT 0'); } catch (e) {
   if (!String(e?.message || '').includes('duplicate column')) throw e;
 }
+
+// migration: wallet_address per user (from wallets.json)
+try { db.exec('ALTER TABLE users ADD COLUMN wallet_address TEXT'); } catch (e) {
+  if (!String(e?.message || '').includes('duplicate column')) throw e;
+}
+
+// migration: AI spending limit per user (in ALGO)
+try { db.exec('ALTER TABLE users ADD COLUMN spend_limit REAL DEFAULT 0.05'); } catch (e) {
+  if (!String(e?.message || '').includes('duplicate column')) throw e;
+}
+
+// migration: total ALGO spent per user
+try { db.exec('ALTER TABLE users ADD COLUMN total_spent REAL DEFAULT 0'); } catch (e) {
+  if (!String(e?.message || '').includes('duplicate column')) throw e;
+}
 // Deterministic seed prices — only set once (when zero), don't re-randomize on restart
 db.exec(`UPDATE products SET market_price =
   CASE
@@ -230,6 +245,18 @@ function seed() {
   // usage rows for all users + anon
   for (const id of ['user', 'pro', 'log', 'ret', 'ravi', 'anon']) {
     db.prepare('INSERT OR IGNORE INTO usage (owner_key, used) VALUES (?,0)').run(id);
+  }
+
+  // Seed wallet addresses (pre-derived from wallets.json)
+  const WALLET_ADDRS = {
+    user: 'DG7KHLVTS3XI42AYG5KXAISTIGIFFB4LG7WAWA6ICBDEG3B6NA4BFKWFHY',
+    pro: 'EKLDBPKGINAY53RP4PQUTWDLBIVJTM5VVR2A3PXGNSUQ4X3QWGFQCYJ5V4',
+    log: 'RCZT2Z3WKAR2OX5HUFWG7CEQAEICEDD4H2KGIWQEYCQQB4HCXW4ZQP54ZE',
+    ret: 'HFHJPLT3QW6DTMHSENJODFZCAV5XUYG3XMGTMXL5XH32OI2ACYOKRO4KCU',
+    ravi: 'QSOFH5G2PSNYVO3S5DF5UY2PKQJXQGQ6SZHQOFQ5TFADT5Y4QWEI746B7E',
+  };
+  for (const [id, addr] of Object.entries(WALLET_ADDRS)) {
+    db.prepare('UPDATE users SET wallet_address = ? WHERE identifier = ? AND wallet_address IS NULL').run(addr, id);
   }
 
   // plans catalog (business model: 1 credit = 1 use)

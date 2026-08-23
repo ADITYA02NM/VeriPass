@@ -11,7 +11,8 @@ export type ScreenType =
   | 'password-reset'
   | 'payment'
   | 'pricing'
-  | 'ai-chat';
+  | 'ai-chat'
+  | 'wallet';
 
 export type TransitionType = 'push' | 'push_back' | 'none';
 

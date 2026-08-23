@@ -13,7 +13,7 @@ interface PaymentScreenProps {
 /**
  * x402 Payment Page — Algorand micropayment checkout.
  * Shown when the free tier (3 verifies) is exhausted: the scan screen routes
- * here, the user pays 0.001 ALGO on Algorand (TestNet when funded, simulated
+ * here, the user pays 0.002 ALGO on Algorand (TestNet when funded, simulated
  * ledger otherwise), and the one-time X-Pay-Signature proof unlocks the report.
  */
 export const PaymentScreen: React.FC<PaymentScreenProps> = ({ onNavigate, code, onPaid }) => {
@@ -70,7 +70,7 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ onNavigate, code, 
             <div className="border-l-4 border-[var(--vp-ink)] pl-3">
               <p className="font-pixel text-[14px] text-[var(--vp-outline)] uppercase">Amount</p>
               <p className="text-[17px] font-bold text-[var(--vp-on-surface)]">
-                0.001 ALGO <span className="font-pixel text-[13px] text-[var(--vp-outline)]">(1,000 microAlgos)</span>
+                0.002 ALGO <span className="font-pixel text-[13px] text-[var(--vp-outline)]">(2,000 microAlgos)</span>
               </p>
             </div>
             <div className="border-l-4 border-[var(--vp-ink)] pl-3">
@@ -82,7 +82,7 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ onNavigate, code, 
             <div className="border-l-4 border-[var(--vp-ink)] pl-3">
               <p className="font-pixel text-[14px] text-[var(--vp-outline)] uppercase">Receiver</p>
               <p className="font-pixel text-[15px] text-[var(--vp-muted)] break-all">
-                QXEMYGSAHRJPLX3XPNRNPFNDPKTMAWKDDNZSOG7HICAJTK5AB636DZD6JI
+                FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M
               </p>
             </div>
             <div className="border-l-4 border-[var(--vp-ink)] pl-3">
@@ -142,7 +142,7 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ onNavigate, code, 
               className="flex-1 bg-[var(--vp-saffron)] text-[var(--vp-ink-text)] font-pixel text-[18px] py-3 px-6 border-2 border-[var(--vp-ink)] voxel-shadow-sm voxel-btn-active flex items-center justify-center gap-2 transition-all hover:bg-[#e8871f] disabled:opacity-60 disabled:cursor-wait cursor-pointer"
             >
               <span className="material-symbols-outlined text-xl">{paying ? 'hourglass_top' : 'bolt'}</span>
-              {paying ? 'PAYING…' : 'PAY 0.001 ALGO'}
+              {paying ? 'PAYING…' : 'PAY 0.002 ALGO'}
             </button>
             <button
               type="button"

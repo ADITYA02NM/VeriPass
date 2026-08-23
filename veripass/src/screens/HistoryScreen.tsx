@@ -107,7 +107,7 @@ export const HistoryScreen: React.FC<HistoryScreenProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Opened from a bookmark (Vault → VIEW HISTORY): load the real product
-  // heritage. Free tier exhausted → 402 → pay 0.001 ALGO (x402) to unlock.
+  // heritage. Free tier exhausted → 402 → pay 0.002 ALGO (x402) to unlock.
   useEffect(() => {
     if (!code) return;
     setLoading(true);
@@ -177,7 +177,7 @@ export const HistoryScreen: React.FC<HistoryScreenProps> = ({
                         PAID (x402 · ALGORAND)
                       </p>
                       <p className="font-pixel text-[12px] text-[var(--vp-cream-text)]/70 mt-1 uppercase tracking-wider">
-                        Free tier exhausted — pay 0.001 ALGO on Algorand to unlock this history
+                        Free tier exhausted — pay 0.002 ALGO on Algorand to unlock this history
                       </p>
                     </div>
                   </div>
@@ -187,7 +187,7 @@ export const HistoryScreen: React.FC<HistoryScreenProps> = ({
                     className="shrink-0 bg-[var(--vp-saffron)] text-[var(--vp-ink-text)] font-pixel text-[17px] py-2 px-4 border-2 border-[var(--vp-ink)] voxel-shadow-sm voxel-btn-active flex items-center justify-center gap-2 transition-all hover:bg-[#e8871f] cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-lg">bolt</span>
-                    PAY 0.001 ALGO
+                    PAY 0.002 ALGO
                   </button>
                 </div>
               )}

@@ -15,7 +15,7 @@ import QRCode from 'qrcode';
 import {
   db, getProductByCode, getCheckpoints, getUsage, bumpUsage, FREE_SCAN_LIMIT,
   addBookmark, removeBookmark, isBookmarked, getBookmarkedProductIds, resetOwnerData, resetDemoProductSignatures,
-  getCredits, consumeCredit, addCredits, getPlans, getPlanById,
+  getCredits, consumeCredit, consumeCredits, addCredits, getPlans, getPlanById,
   recordPlanPurchase, getPlanPurchases, getAgentUsage,
 } from './db.js';
 import { X402, paymentChallenge, simulateAlgorandPayment, verifyPaymentProof } from './x402.js';
@@ -357,6 +357,51 @@ app.post('/api/admin/reset', async (c) => {
   db.prepare('DELETE FROM plan_purchases').run();
   db.prepare('DELETE FROM payments').run();
   return c.json({ ok: true, reset: true, owners: owners.length });
+});
+
+// ================= SPENDING LIMIT (AI spend cap) =================
+app.get('/api/spending', async (c) => {
+  const ok = ownerKey(c);
+  if (!ok) return c.json({ error: 'unauthorized' }, 401);
+  const user = db.prepare('SELECT spend_limit, total_spent, wallet_address FROM users WHERE identifier = ?').get(ok);
+  if (!user) return c.json({ error: 'unauthorized' }, 401);
+  return c.json({
+    spendLimit: user.spend_limit || 0.05,
+    totalSpent: user.total_spent || 0,
+    walletAddress: user.wallet_address || null,
+    remaining: Math.max(0, (user.spend_limit || 0.05) - (user.total_spent || 0)),
+  });
+});
+
+app.post('/api/spending/limit', async (c) => {
+  const ok = ownerKey(c);
+  if (!ok) return c.json({ error: 'unauthorized' }, 401);
+  const body = await c.req.json().catch(() => ({})) || {};
+  const limit = Number(body.limit);
+  if (!limit || limit <= 0 || limit > 1) return c.json({ error: 'limit must be between 0 and 1 ALGO' }, 400);
+  db.prepare('UPDATE users SET spend_limit = ? WHERE identifier = ?').run(limit, ok);
+  return c.json({ ok: true, spendLimit: limit });
+});
+
+// ================= PAYMENTS HISTORY (with lora.algorand tx links) =================
+app.get('/api/payments', async (c) => {
+  const ok = ownerKey(c);
+  if (!ok) return c.json({ error: 'unauthorized' }, 401);
+  const payments = db.prepare('SELECT * FROM payments WHERE owner_key = ? ORDER BY id DESC LIMIT 50').all(ok);
+  return c.json({
+    payments: payments.map((p) => ({
+      txid: p.txid,
+      amount: p.amount,
+      network: p.network,
+      round: p.round,
+      sender: p.sender,
+      receiver: p.receiver,
+      createdAt: p.created_at,
+      loraUrl: p.network === 'testnet-v1.0' && p.txid
+        ? `https://lora.algokit.io/testnet/transaction/${p.txid}`
+        : null,
+    })),
+  });
 });
 
 // ================= /dashboard — judge/admin proof panel =================

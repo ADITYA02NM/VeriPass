@@ -9,15 +9,15 @@ interface AIChatScreenProps {
 }
 
 const SUGGESTIONS = [
-  'Inventory Agent (0.001) — How many products are in my inventory?',
+  'Inventory Agent (0.003) — How many products are in my inventory?',
   'Search Agent (0.005) — Find products matching tea',
   'Compare Agent (0.005) — Compare MED-2026-004 and FAKE-WATCH-7',
-  'Market Agent (0.002) — What is the market price of DJ-TEA-2023-8991?',
+  'Market Agent (0.004) — What is the market price of DJ-TEA-2023-8991?',
 ];
 
 /**
  * VeriPass AI — agentic orchestrator managing 8 specialist agents.
- * COST: 1–5 credits per question (0.001–0.005 ALGO via x402) depending on the
+ * COST: 3–5 credits per question (0.003–0.005 ALGO via x402) depending on the
  * agent used. Credits are consumed first; when they run out the server answers
  * 402 with an x402 challenge until a valid X-Pay-Signature is presented.
  */
@@ -81,7 +81,7 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[var(--vp-cyan)]">auto_awesome</span>
             <span className="font-pixel text-[14px] uppercase tracking-wider">
-              {user ? user.identifier : 'guest'} · {credits} CREDITS · 1–5 / QUESTION
+              {user ? user.identifier : 'guest'} · {credits} CREDITS · 3–5 / QUESTION
             </span>
           </div>
         </section>
@@ -119,7 +119,7 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
                 </p>
                 <p className="text-[14px] text-[var(--vp-muted)] mt-1">
 I manage 8 specialist agents (Inventory, Passport, Market, Usage, Proof, Guide,
-Search, Compare). Ask anything — 1–5 credits per question (0.001–0.005 ALGO)
+Search, Compare). Ask anything — 3–5 credits per question (0.003–0.005 ALGO)
 depending on the agent used.
                 </p>
               </div>

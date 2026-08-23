@@ -13,6 +13,8 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ currentScreen, onNav
     currentScreen === 'preferences' ||
     currentScreen === 'digital-signatures';
 
+  const isWalletActive = currentScreen === 'wallet' || currentScreen === 'payment';
+
   return (
     <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-3 py-2.5 bg-[var(--vp-cream)] border-t-4 border-[var(--vp-ink)] shadow-[0px_-4px_0px_0px_rgba(1,7,102,1)] md:hidden">
       {/* 1. Scan */}
@@ -69,7 +71,25 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ currentScreen, onNav
         <span className="font-pixel text-[13px] uppercase mt-0.5">History</span>
       </button>
 
-      {/* 4. Profile / Account */}
+      {/* 4. Wallet */}
+      <button
+        onClick={() => onNavigate('wallet')}
+        className={`flex flex-col items-center justify-center p-1 w-16 transition-transform active:scale-95 ${
+          isWalletActive
+            ? 'bg-[var(--vp-saffron)] text-[var(--vp-black-text)] border-2 border-[var(--vp-ink)] voxel-shadow-sm font-bold'
+            : 'text-[var(--vp-muted)] hover:bg-[var(--vp-container)]'
+        }`}
+      >
+        <span
+          className="material-symbols-outlined text-[24px]"
+          style={isWalletActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+        >
+          account_balance_wallet
+        </span>
+        <span className="font-pixel text-[13px] uppercase mt-0.5">Wallet</span>
+      </button>
+
+      {/* 5. Profile / Account */}
       <button
         onClick={() => onNavigate('account')}
         className={`flex flex-col items-center justify-center p-1 w-16 transition-transform active:scale-95 ${

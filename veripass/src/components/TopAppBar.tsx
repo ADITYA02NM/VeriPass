@@ -23,10 +23,10 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
         <button
           onClick={() => onNavigate('pricing')}
           className="p-1.5 voxel-border bg-[var(--vp-cream)] voxel-shadow-sm hover:bg-[var(--vp-container)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center text-[var(--vp-ink-text)]"
-          aria-label="Billing"
-          title="Billing"
+          aria-label="Wallet & Billing"
+          title="Wallet & Billing"
         >
-          <span className="material-symbols-outlined text-xl">currency_rupee</span>
+          <span className="material-symbols-outlined text-xl">account_balance_wallet</span>
         </button>
         {showBack && onBack ? (
           <button

@@ -12,6 +12,9 @@ bun.lock
 *.db-shm
 *.db-wal
 
+# Backend data (wallets, testnet accounts, DB)
+backend/data/
+
 # SSL Certs
 certs/
 
@@ -29,6 +32,7 @@ veripass/dist/
 # Sensitive dev files
 ips.md
 testnet-account.json
+wallets.json
 
 # Temp
 /tmp/

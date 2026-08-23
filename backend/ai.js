@@ -1,5 +1,5 @@
 // VeriPass AI — agentic orchestrator managing 8 specialist agents, paid via credits or x402 (Algorand).
-// 1–5 credits per question (0.001–0.005 ALGO via x402) depending on the agent used.
+// 1–5 credits per question (0.003–0.005 ALGO via x402) depending on the agent used.
 import { GoogleGenAI, Type } from '@google/genai';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -41,12 +41,12 @@ function verdictOf(product, cps) {
 }
 
 export const AGENTS = [
-  { id: 'inventory', name: 'Inventory Agent', priceAlgo: '0.001', credits: 1, description: 'Lists your bookmarked products with live verdicts, scores and signature counts.', tools: ['getProducts'] },
-  { id: 'passport', name: 'Passport Agent', priceAlgo: '0.001', credits: 1, description: 'Fetches the full chain-of-custody passport of one bookmarked product.', tools: ['getProductStatus'] },
-  { id: 'market', name: 'Market Agent', priceAlgo: '0.002', credits: 2, description: 'Looks up the VeriPass market price (INR) of a product.', tools: ['getMarketPrice'] },
-  { id: 'usage', name: 'Usage Agent', priceAlgo: '0.001', credits: 1, description: 'Reports your free-scan usage, credit balance and pricing plans.', tools: ['getUsage', 'getPlans'] },
-  { id: 'proof', name: 'Proof Agent', priceAlgo: '0.002', credits: 2, description: 'Summarises the live proof panel: payments, purchases, signatures and product stats.', tools: ['getDashboardStats'] },
-  { id: 'guide', name: 'Guide Agent', priceAlgo: '0.002', credits: 2, description: 'Answers questions about the demo, IP addresses and project guides.', tools: ['getGuide'] },
+  { id: 'inventory', name: 'Inventory Agent', priceAlgo: '0.003', credits: 3, description: 'Lists your bookmarked products with live verdicts, scores and signature counts.', tools: ['getProducts'] },
+  { id: 'passport', name: 'Passport Agent', priceAlgo: '0.003', credits: 3, description: 'Fetches the full chain-of-custody passport of one bookmarked product.', tools: ['getProductStatus'] },
+  { id: 'market', name: 'Market Agent', priceAlgo: '0.004', credits: 4, description: 'Looks up the VeriPass market price (INR) of a product.', tools: ['getMarketPrice'] },
+  { id: 'usage', name: 'Usage Agent', priceAlgo: '0.003', credits: 3, description: 'Reports your free-scan usage, credit balance and pricing plans.', tools: ['getUsage', 'getPlans'] },
+  { id: 'proof', name: 'Proof Agent', priceAlgo: '0.004', credits: 4, description: 'Summarises the live proof panel: payments, purchases, signatures and product stats.', tools: ['getDashboardStats'] },
+  { id: 'guide', name: 'Guide Agent', priceAlgo: '0.004', credits: 4, description: 'Answers questions about the demo, IP addresses and project guides.', tools: ['getGuide'] },
   { id: 'search', name: 'Search Agent', priceAlgo: '0.005', credits: 5, description: 'Complex search across the full product catalogue by name, code, batch, origin or details.', tools: ['searchProducts'] },
   { id: 'compare', name: 'Compare Agent', priceAlgo: '0.005', credits: 5, description: 'Complex side-by-side comparison of two product passports.', tools: ['compareProducts'] },
 ];
@@ -255,12 +255,12 @@ const DECLARATIONS = [
 function buildSystemPrompt(u) {
   return `You are VeriPass AI \u2014 the agentic orchestrator of VeriPass, an anti-counterfeit product-passport platform on Algorand.
 You manage 8 specialist agents, each with its own price (1 credit = 0.001 ALGO):
-- Inventory Agent (0.001 ALGO) \u2014 lists THIS user's bookmarked products with live verdicts.
-- Passport Agent (0.001 ALGO) \u2014 full chain-of-custody passport of one bookmarked product.
-- Market Agent (0.002 ALGO) \u2014 market price (INR) of a product.
-- Usage Agent (0.001 ALGO) \u2014 this user's free-scan usage, credit balance and pricing plans.
-- Proof Agent (0.002 ALGO) \u2014 live proof panel stats (payments, purchases, signatures).
-- Guide Agent (0.002 ALGO) \u2014 demo, IP addresses and project guides.
+- Inventory Agent (0.003 ALGO) \u2014 lists THIS user's bookmarked products with live verdicts.
+- Passport Agent (0.003 ALGO) \u2014 full chain-of-custody passport of one bookmarked product.
+- Market Agent (0.004 ALGO) \u2014 market price (INR) of a product.
+- Usage Agent (0.003 ALGO) \u2014 this user's free-scan usage, credit balance and pricing plans.
+- Proof Agent (0.004 ALGO) \u2014 live proof panel stats (payments, purchases, signatures).
+- Guide Agent (0.004 ALGO) \u2014 demo, IP addresses and project guides.
 - Search Agent (0.005 ALGO) \u2014 complex search across the full product catalogue.
 - Compare Agent (0.005 ALGO) \u2014 side-by-side comparison of two product passports.
 Rules:
@@ -283,7 +283,7 @@ export function registerAiRoutes(app, auth) {
     const { message, history = [] } = await c.req.json().catch(() => ({}));
     if (!message || !String(message).trim()) return c.json({ error: 'message required' }, 400);
 
-    // ---- payment gate: Agentic AI costs 1\u20135 credits per question (0.001\u20130.005 ALGO via x402) ----
+    // ---- payment gate: Agentic AI costs 3\u20135 credits per question (0.003\u20130.005 ALGO via x402) ----
     // The most expensive agent used in the turn sets the price; credits are consumed after the turn.
     const sigHeader = c.req.header('x-pay-signature');
     let paidViaX402 = false;
@@ -295,7 +295,7 @@ export function registerAiRoutes(app, auth) {
       paidViaX402 = true;
     } else if (getCredits(u.identifier) < 1) {
       return c.json({
-        error: 'Agentic AI: 1\u20135 credits per question (0.001\u20130.005 ALGO via x402) depending on the agent. Buy credits or pay to ask.',
+        error: 'Agentic AI: 3\u20135 credits per question (0.003\u20130.005 ALGO via x402) depending on the agent. Buy credits or pay to ask.',
         ...paymentChallenge('0.005'),
       }, 402);
     }
