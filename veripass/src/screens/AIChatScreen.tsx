@@ -83,14 +83,16 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
     setError(null);
     try {
       let res;
+      let paidAmt: string | null = null;
       try {
         res = await aiChat(trimmed, history);
       } catch (e) {
-        // ---- AUTO-PAY: 402 → pay silently → retry once ----
+        // ---- AUTO-PAY: 402 → pay silently (no user tap) → retry once ----
         if (e instanceof ApiError && e.status === 402) {
           setPaying(true);
           try {
-            await autoX402Pay(user?.walletAddress, '0.005');
+            const payRes = await autoX402Pay(user?.walletAddress, '0.005');
+            paidAmt = payRes.amount;
             res = await aiChat(trimmed, history);
           } finally {
             setPaying(false);
@@ -99,7 +101,11 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
           throw e;
         }
       }
-      setMessages((m) => [...m, { role: 'assistant', content: res.reply }]);
+      // Amount used is shown at the end of the answer
+      const footer = paidAmt
+        ? `\n\n---\n⚡ **PAID ${paidAmt} ALGO** VIA X402 · AUTOMATIC`
+        : '';
+      setMessages((m) => [...m, { role: 'assistant', content: res.reply + footer }]);
     } catch (e: any) {
       console.error('[ai-chat]', e);
       if (e?.message?.includes('connected') || e?.message?.includes('declined')) {
@@ -211,7 +217,7 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onNavigate, user }) 
             <div className="self-start bg-[var(--vp-success-container)] border-2 border-[var(--vp-green)] px-4 py-3 voxel-shadow">
               <p className="font-pixel text-[13px] text-[var(--vp-green-text)] uppercase tracking-widest animate-pulse flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px]">bolt</span>
-                Paying agents via x402…
+                Auto-paying agents via x402… no action needed
               </p>
             </div>
           )}

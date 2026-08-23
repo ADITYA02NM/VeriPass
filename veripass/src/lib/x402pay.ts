@@ -15,6 +15,8 @@ const X402_NOTE = 'VeriPass product verification report (x402 · Algorand)';
 export interface AutoPayResult {
   xPaySignature: string;
   txId: string;
+  /** Amount actually paid on-chain, e.g. "0.005" */
+  amount: string;
 }
 
 /**
@@ -54,10 +56,10 @@ export async function autoX402Pay(
     await algosdk.waitForConfirmation(algod, txId, 10);
 
     const result = await recordClientPayment(txId, sender, amountAlgo);
-    return { xPaySignature: result.xPaySignature, txId };
+    return { xPaySignature: result.xPaySignature, txId, amount: amountAlgo };
   }
 
   // ---- Standard user: server-side mnemonic signing ----
   const result = await payX402('ai');
-  return { xPaySignature: result.xPaySignature, txId: result.txId };
+  return { xPaySignature: result.xPaySignature, txId: result.txId, amount: amountAlgo };
 }
