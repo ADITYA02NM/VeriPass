@@ -90,10 +90,7 @@ CREATE TABLE IF NOT EXISTS bookmarks (
   UNIQUE (owner_key, product_id)
 );
 
--- plans + plan_purchases REMOVED: VeriPass is pure x402 pay-per-use (no credits)
 `);
-
-// credits column REMOVED: pure x402 pay-per-use (no credits system)
 
 // migration: market price per product (for the AI market-price tool)
 try { db.exec('ALTER TABLE products ADD COLUMN market_price INTEGER DEFAULT 0'); } catch (e) {
@@ -310,8 +307,6 @@ export function resetDemoProductSignatures() {
     .run(p2.id, 'production', 'Production Signed — harvested & certified', 'AstraSense Industries (Pune)', 'Producer', '2026-08-19 10:30:00',
       'Batch certified by QA — awaiting logistics shipment');
 }
-
-// credits/plans REMOVED: pure x402 pay-per-use — every action = direct ALGO payment
 
 export function recordAgentUse(agentId, credits) {
   db.prepare(
