@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { ScreenType } from '../types';
 import { PassportAnimation } from '../components/PassportAnimation';
-import { login, loginWithWallet, loginWithGoogle, setSession, ApiError, UserInfo } from '../lib/api';
+import { login, loginWithWallet, loginWithGoogle, linkWallet, setSession, ApiError, UserInfo } from '../lib/api';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { peraWallet } from '../lib/pera';
 
@@ -18,6 +18,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 }) => {
   const [identifier, setIdentifier] = useState('');
   const [passkey, setPasskey] = useState('');
+  const [mnemonic, setMnemonic] = useState('');
+  const [showMnemonic, setShowMnemonic] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -29,6 +31,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     setLoading(true);
     try {
       const { token, user } = await login(identifier.trim(), passkey);
+      // Optional: link wallet mnemonic at login — server stores it in wallets.json
+      // so every x402 payment is signed for real from this wallet.
+      if (mnemonic.trim()) {
+        try {
+          await linkWallet(mnemonic.trim());
+        } catch (linkErr) {
+          console.warn('[login] wallet link failed:', linkErr);
+        }
+      }
       setSession(token, user);
       onLogin(user);
       onNavigate('scan', 'push');
@@ -144,6 +155,45 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   className="w-full bg-[var(--vp-cream)] border-2 border-[var(--vp-ink)] py-2.5 pl-10 pr-4 font-pixel text-[19px] text-[var(--vp-ink-text)] focus:outline-none focus:border-[var(--vp-cyan)] transition-colors"
                 />
               </div>
+            </div>
+
+            {/* Optional wallet mnemonic — used for real x402 payments */}
+            <div className="flex flex-col gap-1 relative">
+              <label className="font-pixel text-[14px] text-[var(--vp-muted)] uppercase tracking-wider">
+                Wallet Mnemonic <span className="text-[var(--vp-outline)]">(optional)</span>
+              </label>
+              <div className="relative">
+                <span
+                  className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[var(--vp-ink-text)] text-xl"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
+                  account_balance_wallet
+                </span>
+                <input
+                  type={showMnemonic ? 'text' : 'password'}
+                  value={mnemonic}
+                  onChange={(e) => setMnemonic(e.target.value)}
+                  placeholder="25-WORD ALGORAND MNEMONIC"
+                  autoComplete="off"
+                  className="w-full bg-[var(--vp-cream)] border-2 border-[var(--vp-ink)] py-2.5 pl-10 pr-11 font-pixel text-[15px] text-[var(--vp-ink-text)] focus:outline-none focus:border-[var(--vp-cyan)] transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowMnemonic((v) => !v)}
+                  aria-label={showMnemonic ? 'Hide mnemonic' : 'Show mnemonic'}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--vp-muted)] hover:text-[var(--vp-ink-text)] cursor-pointer"
+                >
+                  <span
+                    className="material-symbols-outlined text-xl"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    {showMnemonic ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
+              <p className="font-pixel text-[11px] text-[var(--vp-outline)] uppercase tracking-wide leading-relaxed">
+                Sent once over HTTPS to enable real x402 payments from your wallet — never shown again.
+              </p>
             </div>
           </div>
 

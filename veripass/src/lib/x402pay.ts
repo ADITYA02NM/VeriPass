@@ -49,7 +49,7 @@ export async function autoX402Pay(
       note: new TextEncoder().encode(X402_NOTE),
     });
 
-    const signedTxns = await peraWallet.signTransaction([txn.toByte()]);
+    const signedTxns = await peraWallet.signTransaction([[{ txn: txn.toByte() }]]);
     const { txId } = await algod.sendRawTransaction(signedTxns[0]).do();
     await algosdk.waitForConfirmation(algod, txId, 10);
 

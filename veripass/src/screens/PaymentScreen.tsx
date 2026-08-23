@@ -53,18 +53,18 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ onNavigate, code, 
       const algod = new algosdk.Algodv2(ALGOD_TOKEN, ALGOD_SERVER, '');
       const suggestedParams = await algod.getTransactionParams().do();
 
-      // Build payment transaction
+      // Build payment transaction (algosdk v3: sender/receiver)
       const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-        from: sender,
-        to: PLATFORM_RECEIVER,
+        sender,
+        receiver: PLATFORM_RECEIVER,
         amount: AMOUNT_MICRO,
         suggestedParams,
         note: new TextEncoder().encode('VeriPass product verification report (x402 · Algorand)'),
       });
 
-      // Sign with Pera
+      // Sign with Pera (group format: [[{ txn }]])
       setMode('submitting');
-      const signedTxns = await peraWallet.signTransaction([txn.toByte()]);
+      const signedTxns = await peraWallet.signTransaction([[{ txn: txn.toByte() }]]);
       const signedTxnBytes = signedTxns[0];
 
       // Submit to AlgoNode
