@@ -82,7 +82,7 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ onNavigate, code, 
             <div className="border-l-4 border-[var(--vp-ink)] pl-3">
               <p className="font-pixel text-[14px] text-[var(--vp-outline)] uppercase">Receiver</p>
               <p className="font-pixel text-[15px] text-[var(--vp-muted)] break-all">
-                FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M
+                NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM
               </p>
             </div>
             <div className="border-l-4 border-[var(--vp-ink)] pl-3">

@@ -23,7 +23,7 @@ const WALLETS_FILE = path.join(__dirname, 'data', 'wallets.json');
 const ALGOD_URL = 'https://testnet-api.algonode.cloud';
 
 // Platform receiver wallet — all payments go TO this address
-const PLATFORM_RECEIVER = 'FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M';
+const PLATFORM_RECEIVER = 'NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM';
 
 export const X402 = {
   provider: 'algorand',

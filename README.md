@@ -34,13 +34,13 @@
 | Parameter | Value |
 |---|---|
 | **Network** | Algorand TestNet |
-| **Platform Receiver** | `FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M` |
+| **Platform Receiver** | `NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM` |
 | **Payment Method** | Native ALGO transactions (via `algosdk.makePaymentTxnWithSuggestedParamsFromObject`) |
 | **Smart Contracts** | None — payments are direct wallet-to-wallet transfers |
 | **Facilitator** | GoPlausible x402 |
 | **ALGOD Endpoint** | `https://testnet-api.algonode.cloud` |
 | **Explorer** | [Lora TestNet](https://lora.algokit.io/testnet) |
-| **Platform Account** | [View Transactions](https://lora.algokit.io/testnet/account/FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M) |
+| **Platform Account** | [View Transactions](https://lora.algokit.io/testnet/account/NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM) |
 
 ### Why No Smart Contracts?
 
@@ -113,7 +113,7 @@ User asks AI "compare these products" → Agent pays 0.005 ALGO → Gets compari
 Research agent runs → Pays market-data (0.003) → Pays news (0.003) → Pays report (0.003)
 ```
 
-Every payment is a real Algorand TestNet transaction, viewable on [Lora Explorer](https://lora.algokit.io/testnet/account/FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M).
+Every payment is a real Algorand TestNet transaction, viewable on [Lora Explorer](https://lora.algokit.io/testnet/account/NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM).
 
 ---
 
@@ -223,10 +223,10 @@ All payments are real Algorand TestNet transactions, viewable on Lora Explorer:
 
 | Transaction Type | Amount | Explorer Link |
 |---|---|---|
-| Product Verification | 0.002 ALGO | [View Platform Account](https://lora.algokit.io/testnet/account/FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M) |
-| AI Agent Query | 0.003–0.005 ALGO | [View Platform Account](https://lora.algokit.io/testnet/account/FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M) |
-| Research Agent Run | 0.009 ALGO total | [View Platform Account](https://lora.algokit.io/testnet/account/FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M) |
-| History Lookup | 0.001 ALGO | [View Platform Account](https://lora.algokit.io/testnet/account/FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M) |
+| Product Verification | 0.002 ALGO | [View Platform Account](https://lora.algokit.io/testnet/account/NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM) |
+| AI Agent Query | 0.003–0.005 ALGO | [View Platform Account](https://lora.algokit.io/testnet/account/NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM) |
+| Research Agent Run | 0.009 ALGO total | [View Platform Account](https://lora.algokit.io/testnet/account/NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM) |
+| History Lookup | 0.001 ALGO | [View Platform Account](https://lora.algokit.io/testnet/account/NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM) |
 
 > **Note**: All transactions are direct wallet-to-wallet ALGO transfers. Each user has a unique TestNet wallet. In demo mode, simulated transactions use the `SIM-` prefix.
 
@@ -308,7 +308,7 @@ All accounts are on Algorand TestNet. Each wallet has its own mnemonic for signi
 
 | Account | Address | Mnemonic | Balance | Role |
 |---|---|---|---|---|
-| **Platform Receiver** | `FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M` | `biology direct hollow brother arrow sibling wrist grape ketchup dress raven enjoy pause brain obscure evil margin cereal host artist alone disagree vault ability invest` | ~3.328 ALGO | Merchant (receives payments) |
+| **Platform Receiver** | `NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM` | *(mnemonic not stored — add in wallets.json)* | — | Merchant (receives payments) |
 | **User** | `QSOFH5G2PSNYVO3S5DF5UY2PKQJXQGQ6SZHQOFQ5TFADT5Y4QWEI746B7E` | `require inject gadget clutch start crumble treat oppose victory lab idle wait tide sword worth panda march exhaust fiction nature misery ranch soft absorb turtle` | Unfunded | User role (buyer/scanner) |
 | **Ravi** | `DG7KHLVTS3XI42AYG5KXAISTIGIFFB4LG7WAWA6ICBDEG3B6NA4BFKWFHY` | `tool alert hazard pass pistol gold insane practice sister guard token agent violin service brother mountain frog consider dance inside noble width diamond able scare` | ~3.328 ALGO | Test buyer |
 | **Producer** | `EKLDBPKGINAY53RP4PQUTWDLBIVJTM5VVR2A3PXGNSUQ4X3QWGFQCYJ5V4` | `brief net busy jungle iron legend ahead bulb bonus mouse bundle impact hedgehog minor wool cupboard pen evolve prevent wedding begin finger exhaust above track` | ~3.328 ALGO | Producer role |
@@ -321,9 +321,9 @@ All accounts are on Algorand TestNet. Each wallet has its own mnemonic for signi
 ### Merchant Account (Platform Receiver)
 
 The platform receiver wallet collects all x402 micropayments:
-- **Address:** `FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M`
+- **Address:** `NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM`
 - **Fund Tx:** `BGX4HS7GXWF6IJSQRT32BCKJNOYTMQPNYC743O6XIM4PGZPCP3LA`
-- **Explorer:** [View on Lora](https://lora.algokit.io/testnet/account/FPOEBN36ZMS2DW5342D6Q6QJYQQWWM6YASYW57R2THSIDCOACTLLJYWB6M)
+- **Explorer:** [View on Lora](https://lora.algokit.io/testnet/account/NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM)
 
 ---
 
