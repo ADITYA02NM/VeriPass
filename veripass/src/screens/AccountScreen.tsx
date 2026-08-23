@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScreenType, UserRole } from '../types';
 import { TopAppBar } from '../components/TopAppBar';
-import { terminateSession, clearSession, UserInfo } from '../lib/api';
+import { terminateSession, clearSession, UserInfo, getPayments, PaymentRecord } from '../lib/api';
 import { clearScanHistory } from './HistoryScreen';
 
 interface AccountScreenProps {
@@ -13,6 +13,16 @@ interface AccountScreenProps {
 
 export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate, userRole, user, onLogout }) => {
   const [terminating, setTerminating] = React.useState(false);
+  const [payments, setPayments] = React.useState<PaymentRecord[]>([]);
+
+  // Dashboard: recent x402 transaction IDs
+  React.useEffect(() => {
+    let alive = true;
+    getPayments()
+      .then((r) => { if (alive) setPayments((r.payments || []).slice(0, 5)); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
   const handleTerminate = async () => {
     if (!window.confirm('Terminate session?\n\nThis will log you out and clear local data.')) return;
@@ -146,6 +156,47 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onNavigate, userRo
             </button>
           )}
         </section>
+
+        {/* Section 2.5: Recent x402 Transactions (dashboard) */}
+        {payments.length > 0 && (
+          <section className="mb-6 border-2 border-[var(--vp-ink)] bg-[var(--vp-surface)] p-5 voxel-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-pixel text-[16px] text-[var(--vp-ink-text)] uppercase tracking-wider flex items-center gap-2">
+                <span className="material-symbols-outlined text-xl">receipt_long</span>
+                Recent x402 Transactions
+              </h3>
+              <button
+                type="button"
+                onClick={() => onNavigate('wallet', 'push')}
+                className="font-pixel text-[12px] text-[var(--vp-cyan-text)] underline hover:text-[var(--vp-saffron-text)] cursor-pointer"
+              >
+                VIEW ALL
+              </button>
+            </div>
+            <div className="flex flex-col gap-2">
+              {payments.map((p, i) => (
+                <div key={i} className="border-l-4 border-[var(--vp-saffron)] pl-3 py-1.5 bg-[var(--vp-container-low)]">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="font-pixel text-[13px] text-[var(--vp-ink-text)]">{p.amount} ALGO</span>
+                    <span className="font-pixel text-[11px] text-[var(--vp-muted)]">{p.createdAt}</span>
+                  </div>
+                  <p className="font-pixel text-[11px] text-[var(--vp-outline)] break-all mt-0.5">TX: {p.txid}</p>
+                  {p.loraUrl && (
+                    <a
+                      href={p.loraUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-pixel text-[11px] text-[var(--vp-cyan-text)] underline mt-0.5 inline-flex items-center gap-1 hover:text-[var(--vp-saffron-text)]"
+                    >
+                      <span className="material-symbols-outlined text-sm">open_in_new</span>
+                      Lora (TestNet)
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Section 3: Danger Zone */}
         <section className="mt-8">
