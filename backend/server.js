@@ -236,6 +236,9 @@ app.get('/api/verify/:code', async (c) => {
   }, 402);
 });
 
+// ================= PLANS (pricing stub) =================
+app.get('/api/plans', (c) => c.json({ plans: [] }));
+
 // ================= USAGE (api-usage bar data) =================
 app.get('/api/usage', async (c) => {
   const ok = ownerKey(c);
