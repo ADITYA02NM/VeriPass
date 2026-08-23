@@ -6,7 +6,7 @@
 
 import crypto from 'crypto';
 import { GoogleGenAI } from '@google/genai';
-import { db, getProductByCode, getCheckpoints, getPlans } from './db.js';
+import { db, getProductByCode, getCheckpoints } from './db.js';
 import { paymentChallenge, simulateAlgorandPayment } from './x402.js';
 import { signToken, auth as _auth, ownerKey as _ownerKey } from './auth.js';
 
@@ -37,10 +37,9 @@ function verdictOf(product, cps) {
 }
 
 // ---------------- priced services ----------------
-// Service 1: market-data — live inventory + verdicts + plan pricing (market context)
+// Service 1: market-data — live inventory + verdicts (market context)
 async function serviceMarketData() {
   const products = db.prepare('SELECT * FROM products ORDER BY id').all();
-  const plans = getPlans();
   const rows = products.map((p) => {
     const cps = getCheckpoints(p.id);
     const v = verdictOf(p, cps);
@@ -55,7 +54,6 @@ async function serviceMarketData() {
   });
   return {
     products: rows,
-    plans: plans.map((p) => ({ name: p.name, credits: p.credits, priceInr: p.price_inr })),
   };
 }
 
