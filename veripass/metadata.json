@@ -1,6 +1,0 @@
-{
-  "name": "VeriPass",
-  "description": "High-assurance institutional digital identity and immutable passport verification system with brutalist voxel interface.",
-  "requestFramePermissions": ["camera"],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
