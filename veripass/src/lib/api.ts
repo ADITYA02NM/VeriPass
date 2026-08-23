@@ -10,6 +10,7 @@ export interface UserInfo {
   name: string;
   role: 'User' | 'Producer' | 'Logistics' | 'Retailer';
   origin: string;
+  walletAddress?: string; // set when logged in via Pera WalletConnect
 }
 
 export interface Verdict {
@@ -192,6 +193,14 @@ export function payX402(purpose: 'verify' | 'ai' | 'agent' = 'verify') {
   return apiFetch<PayResult>('/api/x402/pay', {
     method: 'POST',
     body: JSON.stringify({ purpose }),
+  });
+}
+
+/** Record a client-side signed Algorand transaction (Pera wallet). */
+export function recordClientPayment(txId: string, sender: string, amount: string = '0.002') {
+  return apiFetch<PayResult>('/api/x402/client-pay', {
+    method: 'POST',
+    body: JSON.stringify({ txId, sender, amount }),
   });
 }
 

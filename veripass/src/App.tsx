@@ -142,7 +142,7 @@ export default function App() {
       case 'password-reset':
         return <PasswordResetScreen onNavigate={handleNavigate} />;
       case 'payment':
-        return <PaymentScreen onNavigate={handleNavigate} code={pendingCode} onPaid={handlePaid} />;
+        return <PaymentScreen onNavigate={handleNavigate} code={pendingCode} onPaid={handlePaid} user={user} />;
       case 'ai-chat':
         return <AIChatScreen onNavigate={handleNavigate} user={user} />;
       case 'wallet':

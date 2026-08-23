@@ -17,6 +17,7 @@
     "@tailwindcss/vite": "^4.1.14",
     "@types/three": "^0.185.4",
     "@vitejs/plugin-react": "^5.0.4",
+    "algosdk": "^3.7.0",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "jsqr": "^1.4.0",

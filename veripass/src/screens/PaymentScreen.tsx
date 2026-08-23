@@ -2,32 +2,105 @@ import React, { useState } from 'react';
 import { ScreenType } from '../types';
 import { TopAppBar } from '../components/TopAppBar';
 import { BottomNavBar } from '../components/BottomNavBar';
-import { payX402, PayResult, ApiError } from '../lib/api';
+import { payX402, recordClientPayment, PayResult, ApiError, UserInfo } from '../lib/api';
+import { peraWallet } from '../lib/pera';
+import * as algosdk from 'algosdk';
 
 interface PaymentScreenProps {
   onNavigate: (screen: ScreenType, transition?: 'push' | 'push_back' | 'none') => void;
   code: string | null;
   onPaid: (signature: string) => void;
+  user: UserInfo | null;
 }
+
+/** AlgoNode TestNet endpoint for submitting signed transactions. */
+const ALGOD_SERVER = 'https://testnet-api.algonode.cloud';
+const ALGOD_TOKEN = '';
+const PLATFORM_RECEIVER = 'NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM';
+const AMOUNT_MICRO = 2000; // 0.002 ALGO
 
 /**
  * x402 Payment Page — Algorand micropayment checkout.
- * Shown when the free tier (3 verifies) is exhausted: the scan screen routes
- * here, the user pays 0.002 ALGO on Algorand (TestNet when funded, simulated
- * ledger otherwise), and the one-time X-Pay-Signature proof unlocks the report.
+ * Real Pera wallet signing when user.walletAddress is present,
+ * server-side mnemonic signing as fallback for other users.
  */
-export const PaymentScreen: React.FC<PaymentScreenProps> = ({ onNavigate, code, onPaid }) => {
+export const PaymentScreen: React.FC<PaymentScreenProps> = ({ onNavigate, code, onPaid, user }) => {
   const [paying, setPaying] = useState(false);
   const [tx, setTx] = useState<PayResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<'idle' | 'signing' | 'submitting' | 'confirming'>('idle');
 
-  const handlePay = async () => {
+  const isPeraWallet = !!user?.walletAddress;
+
+  /** Real client-side Pera wallet signing. */
+  const handlePayPera = async () => {
+    setPaying(true);
+    setError(null);
+    setMode('signing');
+    try {
+      // Ensure Pera is connected
+      const accounts = await peraWallet.connect();
+      const sender = accounts[0];
+      if (!sender) throw new Error('No Pera wallet address returned');
+
+      // Get suggested params from AlgoNode
+      const algod = new algosdk.Algodv2(ALGOD_TOKEN, ALGOD_SERVER, '');
+      const suggestedParams = await algod.getTransactionParams().do();
+
+      // Build payment transaction
+      const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        from: sender,
+        to: PLATFORM_RECEIVER,
+        amount: AMOUNT_MICRO,
+        suggestedParams,
+        note: new TextEncoder().encode('VeriPass x402 verification'),
+      });
+
+      // Sign with Pera
+      setMode('submitting');
+      const signedTxns = await peraWallet.signTransaction([txn.toByte()]);
+      const signedTxnBytes = signedTxns[0];
+
+      // Submit to AlgoNode
+      const { txId } = await algod.sendRawTransaction(signedTxnBytes).do();
+      setMode('confirming');
+
+      // Wait for confirmation (poll up to 10 rounds)
+      const confirmed = await algosdk.waitForConfirmation(algod, txId, 10);
+      const round = Number(confirmed['confirmed-round'] ?? confirmed.confirmedRound ?? 0);
+
+      // Record payment on backend to get xPaySignature
+      const result = await recordClientPayment(txId, sender, '0.002');
+      setTx(result);
+
+      // Brief confirmation beat, then hand the proof back
+      setTimeout(() => {
+        onPaid(result.xPaySignature);
+        onNavigate('scan', 'push_back');
+      }, 1400);
+    } catch (e: any) {
+      console.error('[x402] Pera pay error:', e);
+      if (e?.message?.includes('connected') || e?.message?.includes('User declined')) {
+        setError('PAYMENT CANCELLED BY USER');
+      } else if (e?.status === 402) {
+        setError('Transaction not yet confirmed on-chain — wait a moment and try again');
+      } else {
+        setError(e instanceof ApiError ? e.message : (e?.message || 'WALLET SIGNING FAILED — TRY AGAIN'));
+      }
+    } finally {
+      setPaying(false);
+      setMode('idle');
+    }
+  };
+
+  /** Server-side mnemonic-based payment (non-Pera users). */
+  const handlePayServer = async () => {
     setPaying(true);
     setError(null);
     try {
       const result = await payX402();
       setTx(result);
-      // brief confirmation beat, then hand the proof back to the scan screen
+      // Brief confirmation beat, then hand the proof back
       setTimeout(() => {
         onPaid(result.xPaySignature);
         onNavigate('scan', 'push_back');
@@ -39,6 +112,13 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ onNavigate, code, 
     }
   };
 
+  const handlePay = isPeraWallet ? handlePayPera : handlePayServer;
+
+  const signingLabel =
+    mode === 'signing' ? 'Signing in Pera Wallet…' :
+    mode === 'submitting' ? 'Submitting to Algorand…' :
+    mode === 'confirming' ? 'Waiting for confirmation…' : '';
+
   return (
     <div className="bg-[var(--vp-surface)] min-h-screen flex flex-col pt-16 pb-24">
       <TopAppBar currentScreen="payment" onNavigate={onNavigate} />
@@ -49,6 +129,14 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ onNavigate, code, 
           <p className="font-pixel text-[17px] text-[var(--vp-muted)] uppercase tracking-widest mt-1">
             Algorand micropayment · unlock this verification report
           </p>
+          {isPeraWallet && (
+            <div className="mt-2 flex items-center gap-2">
+              <div className="w-2.5 h-2.5 bg-[var(--vp-green)] border border-[var(--vp-ink)]" />
+              <span className="font-pixel text-[13px] text-[var(--vp-green-text)] uppercase tracking-widest">
+                Pera wallet connected · client-side signing
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ============ Invoice card ============ */}
@@ -76,13 +164,13 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ onNavigate, code, 
             <div className="border-l-4 border-[var(--vp-ink)] pl-3">
               <p className="font-pixel text-[14px] text-[var(--vp-outline)] uppercase">Network</p>
               <p className="text-[17px] font-bold text-[var(--vp-on-surface)]">
-                Algorand <span className="font-pixel text-[13px] text-[var(--vp-saffron-text)]">(TestNet when funded · sim fallback)</span>
+                Algorand <span className="font-pixel text-[13px] text-[var(--vp-saffron-text)]">(TestNet)</span>
               </p>
             </div>
             <div className="border-l-4 border-[var(--vp-ink)] pl-3">
               <p className="font-pixel text-[14px] text-[var(--vp-outline)] uppercase">Receiver</p>
               <p className="font-pixel text-[15px] text-[var(--vp-muted)] break-all">
-                NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM
+                {PLATFORM_RECEIVER}
               </p>
             </div>
             <div className="border-l-4 border-[var(--vp-ink)] pl-3">
@@ -142,7 +230,7 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ onNavigate, code, 
               className="flex-1 bg-[var(--vp-saffron)] text-[var(--vp-ink-text)] font-pixel text-[18px] py-3 px-6 border-2 border-[var(--vp-ink)] voxel-shadow-sm voxel-btn-active flex items-center justify-center gap-2 transition-all hover:bg-[#e8871f] disabled:opacity-60 disabled:cursor-wait cursor-pointer"
             >
               <span className="material-symbols-outlined text-xl">{paying ? 'hourglass_top' : 'bolt'}</span>
-              {paying ? 'PAYING…' : 'PAY 0.002 ALGO'}
+              {paying ? (signingLabel || 'PAYING…') : 'PAY 0.002 ALGO'}
             </button>
             <button
               type="button"

@@ -511,6 +511,46 @@ app.post('/api/x402/pay', async (c) => {
 });
 function b64url(o) { return Buffer.from(JSON.stringify(o)).toString('base64url'); }
 
+// ================= x402: Record client-side signed payment (Pera wallet) =================
+app.post('/api/x402/client-pay', async (c) => {
+  const ok = ownerKey(c);
+  const body = await c.req.json().catch(() => ({})) || {};
+  const { txId, sender, amount } = body;
+  if (!txId || !sender) return c.json({ error: 'txId and sender required' }, 400);
+  const amt = amount || X402.amount;
+
+  // Verify on-chain — confirm the tx actually exists and is confirmed
+  const NETWORK = 'testnet-v1.0';
+  let round = 0;
+  try {
+    const algod = new algosdk.Algodv2('', 'https://testnet-api.algonode.cloud', '');
+    const confirmed = await algod.pendingTransactionInformation(txId).do();
+    round = Number(confirmed.confirmedRound ?? confirmed['confirmed-round'] ?? 0);
+    if (!round) return c.json({ error: 'Transaction not yet confirmed on-chain. Wait a moment and try again.' }, 402);
+  } catch (e) {
+    console.error('[x402] client-pay on-chain verify failed:', e.message);
+    return c.json({ error: 'Could not verify transaction on-chain: ' + e.message }, 402);
+  }
+
+  // Record payment in local DB
+  db.prepare(
+    'INSERT OR IGNORE INTO payments (txid, owner_key, amount, network, round, sender, receiver) VALUES (?,?,?,?,?,?,?)'
+  ).run(txId, ok, amt, NETWORK, round, sender, X402.receiverAddress);
+
+  const signaturePayload = b64url({ txId, sender, network: NETWORK });
+  return c.json({
+    ok: true,
+    txId,
+    round,
+    amount: amt,
+    network: NETWORK,
+    sender,
+    receiver: X402.receiverAddress,
+    xPaySignature: signaturePayload,
+    note: 'Real Algorand TestNet payment — signed by Pera wallet on-chain.',
+  });
+});
+
 // ================= SIGN (live signing on phone 2) =================
 app.post('/api/products/:code/sign', async (c) => {
   const u = auth(c);

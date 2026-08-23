@@ -2,10 +2,8 @@ import React, { useState, useCallback } from 'react';
 import { ScreenType } from '../types';
 import { PassportAnimation } from '../components/PassportAnimation';
 import { login, loginWithWallet, loginWithGoogle, setSession, ApiError, UserInfo } from '../lib/api';
-import { PeraWalletConnect } from '@perawallet/connect';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
-
-const peraWallet = new PeraWalletConnect({ chainId: 416002 });
+import { peraWallet } from '../lib/pera';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
