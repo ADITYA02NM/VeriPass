@@ -300,23 +300,22 @@ GEMINI_API_KEY=your-gemini-key
 VERIPASS_SECRET=your-hmac-secret
 ```
 
-> **Note**: Wallet addresses and payment configuration are managed in `backend/data/wallets.json`.
+> **Note**: Wallet addresses and payment configuration are managed in `backend/data/wallets.json` (gitignored).
 
 ### TestNet Accounts (for testing)
 
-All accounts are on Algorand TestNet. Each wallet has its own mnemonic for signing transactions.
+All accounts are on Algorand TestNet. Wallet mnemonics are stored securely in `backend/data/wallets.json` (gitignored).
 
-| Account | Address | Mnemonic | Balance | Role |
-|---|---|---|---|---|
-| **Platform Receiver** | `NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM` | *(mnemonic not stored — add in wallets.json)* | — | Merchant (receives payments) |
-| **User** | `QSOFH5G2PSNYVO3S5DF5UY2PKQJXQGQ6SZHQOFQ5TFADT5Y4QWEI746B7E` | `require inject gadget clutch start crumble treat oppose victory lab idle wait tide sword worth panda march exhaust fiction nature misery ranch soft absorb turtle` | Unfunded | User role (buyer/scanner) |
-| **Ravi** | `DG7KHLVTS3XI42AYG5KXAISTIGIFFB4LG7WAWA6ICBDEG3B6NA4BFKWFHY` | `tool alert hazard pass pistol gold insane practice sister guard token agent violin service brother mountain frog consider dance inside noble width diamond able scare` | ~3.328 ALGO | Test buyer |
-| **Producer** | `EKLDBPKGINAY53RP4PQUTWDLBIVJTM5VVR2A3PXGNSUQ4X3QWGFQCYJ5V4` | `brief net busy jungle iron legend ahead bulb bonus mouse bundle impact hedgehog minor wool cupboard pen evolve prevent wedding begin finger exhaust above track` | ~3.328 ALGO | Producer role |
-| **Logistics** | `RCZT2Z3WKAR2OX5HUFWG7CEQAEICEDD4H2KGIWQEYCQQB4HCXW4ZQP54ZE` | `notice echo bargain bulk buffalo library master choose holiday obtain gold sad provide attend pattern hazard job depth fire turtle board teach lyrics abstract tragic` | ~3.328 ALGO | Logistics role |
-| **Retailer** | `HFHJPLT3QW6DTMHSENJODFZCAV5XUYG3XMGTMXL5XH32OI2ACYOKRO4KCU` | `parrot oyster axis muscle cupboard asthma tool drum apology topple ticket favorite airport setup away mosquito usage mandate typical erupt inquiry record submit above float` | ~3.328 ALGO | Retailer role |
-| **TestNet Faucet** | `QXEMYGSAHRJPLX3XPNRNPFNDPKTMAWKDDNZSOG7HICAJTK5AB636DZD6JI` | `river match sentence paper ticket desert zone route home catalog october lava gift plate ceiling glimpse truly decline exile holiday extra first stomach abandon volcano` | ~10 ALGO | Funded via AlgoKit dispenser |
+| Account | Address | Balance | Role |
+|---|---|---|---|
+| **Platform Receiver** | `NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM` | — | Merchant (receives payments) |
+| **User** | `QSOFH5G2PSNYVO3S5DF5UY2PKQJXQGQ6SZHQOFQ5TFADT5Y4QWEI746B7E` | Unfunded | User role (buyer/scanner) |
+| **Producer** | `EKLDBPKGINAY53RP4PQUTWDLBIVJTM5VVR2A3PXGNSUQ4X3QWGFQCYJ5V4` | ~3.328 ALGO | Producer role |
+| **Logistics** | `RCZT2Z3WKAR2OX5HUFWG7CEQAEICEDD4H2KGIWQEYCQQB4HCXW4ZQP54ZE` | ~3.328 ALGO | Logistics role |
+| **Retailer** | `HFHJPLT3QW6DTMHSENJODFZCAV5XUYG3XMGTMXL5XH32OI2ACYOKRO4KCU` | ~3.328 ALGO | Retailer role |
+| **TestNet Faucet** | `QXEMYGSAHRJPLX3XPNRNPFNDPKTMAWKDDNZSOG7HICAJTK5AB636DZD6JI` | ~10 ALGO | Funded via AlgoKit dispenser |
 
-> **Note**: Fund wallets via the [Lora TestNet Faucet](https://lora.algokit.io/testnet/fund). Each account has ~3.328 ALGO funded for testing. The User account is intentionally unfunded to test wallet funding flow.
+> **Note**: Fund wallets via the [Lora TestNet Faucet](https://lora.algokit.io/testnet/fund). Mnemonics are kept in `wallets.json` and never committed to version control.
 
 ### Merchant Account (Platform Receiver)
 
@@ -406,9 +405,9 @@ Live visualization of:
 
 | Member | Role | Focus |
 |---|---|---|
-| **Rakshhith S** | Backend Lead | Node.js, Hono, x402 integration, Algorand payments |
-| **Aditya Gowda** | Cybersecurity + Blockchain | Smart contracts, security audit, Algorand TestNet |
-| **Shreeraksha H S** | Frontend Lead | React, TypeScript, UI/UX design |
+| **Member 1** | Backend Lead | Node.js, Hono, x402 integration, Algorand payments |
+| **Member 2** | Cybersecurity + Blockchain | Smart contracts, security audit, Algorand TestNet |
+| **Member 3** | Frontend Lead | React, TypeScript, UI/UX design |
 
 **College**: Bangalore Institute of Engineering
 
