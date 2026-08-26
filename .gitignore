@@ -36,3 +36,7 @@ wallets.json
 
 # Temp
 /tmp/
+
+# Open Dev data
+open-dev-data/
+
