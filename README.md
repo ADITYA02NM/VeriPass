@@ -1,425 +1,167 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/ADITYA02NM/VeriPass/main/assets/passport-banner.svg" alt="VeriPass Passport" width="100%" />
+# ⚡ VeriPass
 
-# 🛂 VeriPass
+### x402 Agentic Product Passport on Algorand
 
-### **x402 Agentic Product Passport on Algorand**
+**Verify any product's authenticity and supply-chain provenance with AI-powered agents and micropayments.**
 
-<p>
-  <img src="https://img.shields.io/badge/🚀_Live_App-veripass.onrender.com-00C853?style=for-the-badge&logo=render&logoColor=white" alt="Live App" />
-  <img src="https://img.shields.io/badge/GitHub-ADITYA02NM/VeriPass-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" />
-  <img src="https://img.shields.io/badge/Blockchain-Algorand-000000?style=for-the-badge&logo=algorand&logoColor=white" alt="Algorand" />
-  <img src="https://img.shields.io/badge/Protocol-x402-FF6B35?style=for-the-badge&logo=http&logoColor=white" alt="x402" />
-  <img src="https://img.shields.io/badge/AI-Google_Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini AI" />
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License" />
-</p>
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat&logo=typescript)](https://typescriptlang.org)
+[![Algorand](https://img.shields.io/badge/Algorand-TestNet-000000?style=flat)](https://algorand.co)
+[![x402](https://img.shields.io/badge/x402-Protocol-FF6B35?style=flat)](https://x402.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](https://opensource.org/licenses/MIT)
 
-<p>
-  <strong>🤖 AI agents that pay per-use</strong> ·
-  <strong>📦 Supply-chain verification</strong> ·
-  <strong>💰 Machine-to-machine payments</strong>
-</p>
+[📺 Watch Demo](https://www.youtube.com/shorts/pzOABdKjVbA) · [🌐 Live App](https://veripass-t3ef.onrender.com) · [💻 GitHub](https://github.com/ADITYA02NM/VeriPass)
 
----
-
-### 🎬 Demo Video
-
-[![VeriPass Demo](https://img.shields.io/badge/▶_Watch_Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/shorts/pzOABdKjVbA)
-
-> 📱 **Made in India** 🇮🇳 — Built by students at Bangalore Institute of Engineering
-
----
+[![Devpost](https://img.shields.io/badge/Devpost-VeriPass-1B3A5C?style=for-the-badge&logo=devpost)](https://devpost.com/software/veripass) · [![DoraHacks](https://img.shields.io/badge/DoraHacks-Buidl-48115-FD7E14?style=for-the-badge&logo=dorahacks)](https://dorahacks.io/buidl/48115/)
 
 </div>
 
-## 📋 Submission Brief — x402 Pre-Hack (Algorand)
-
-<table>
-<tr>
-<td>
-
-| Requirement | Status |
-|---|---|
-| ✅ Working project | Deployed on Render (live) |
-| ✅ x402 integration | `@x402/hono` + `@x402/avm` on Algorand TestNet |
-| ✅ Public GitHub repo | `github.com/ADITYA02NM/VeriPass` |
-| ✅ README | This document |
-| ✅ Smart Contracts | Native Algorand payments (not ASA/ARC4) |
-| ✅ Demo link | [veripass-t3ef.onrender.com](https://veripass-t3ef.onrender.com) |
-| ✅ GoPlausible facilitator | Configured for payment settlement |
-| ✅ Team | Cyber Assassins (4 members) |
-| ✅ Demo video | [YouTube Shorts](https://www.youtube.com/shorts/pzOABdKjVbA) |
-
-</td>
-<td align="center">
-
-<img src="https://raw.githubusercontent.com/ADITYA02NM/VeriPass/main/assets/passport-icon.svg" alt="Passport Icon" width="150" />
-
-</td>
-</tr>
-</table>
-
 ---
 
-## ⛓️ Algorand TestNet Details
+## 🎯 The Problem
 
-| Parameter | Value |
-|---|---|
-| 🌐 **Network** | Algorand TestNet |
-| 📬 **Platform Receiver** | `NYRK2742GDQ...SPNT7ZOPM` |
-| 💳 **Payment Method** | Native ALGO transactions |
-| 📜 **Smart Contracts** | None — direct wallet-to-wallet transfers |
-| 🏦 **Facilitator** | GoPlausible x402 |
-| 🔗 **ALGOD Endpoint** | `https://testnet-api.algonode.cloud` |
-| 🔍 **Explorer** | [Lora TestNet](https://lora.algokit.io/testnet) |
-| 🏛️ **Platform Account** | [View Transactions](https://lora.algokit.io/testnet/account/NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM) |
+> **Counterfeit products cost India ₹1.5 lakh crore annually** — and there's no affordable way for consumers or AI agents to verify product authenticity and supply-chain provenance in real time.
 
-### 🤔 Why No Smart Contracts?
-
-VeriPass uses **native payment transactions** because:
-
-| Benefit | Description |
-|---|---|
-| ⚡ **Speed** | 3.3s finality vs contract call overhead |
-| 💰 **Cost** | 0.001 ALGO fee per txn (minimum network fee) |
-| 🔧 **Simplicity** | No contract deployment or ABI needed |
-| 📡 **x402 Spec** | Protocol specifies HTTP header payments, not on-chain contracts |
-
-```javascript
-// x402.js — user wallet pays platform receiver
-const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-  sender: userWallet.address,    // per-user wallet
-  receiver: PLATFORM_RECEIVER,   // platform fee collection
-  amount: microAlgos,            // e.g. 2000 (0.002 ALGO)
-  suggestedParams: params,
-});
-```
-
----
-
-## 🔍 Problem Statement
-
-<div align="center">
-
-### 💸 Counterfeit products cost India **₹1.5 lakh crore annually**
-
-</div>
-
-From adulterated medicines to fake electronics, consumers and businesses lose money and trust:
-
-| Problem | Impact |
-|---|---|
-| 🌫️ **Opaque** | No way for consumers to verify a product's journey from factory to shelf |
-| 🏢 **Centralised** | Trust depends on one company's word — easily forged |
-| 💰 **Expensive** | Enterprise supply-chain verification costs thousands of dollars |
-
-Meanwhile, **AI agents** (autonomous software bots) need to transact with each other to fetch data, verify products, and generate reports — but there's no standard micropayment protocol for agent-to-agent commerce.
-
----
-
-## 💡 Solution — VeriPass
-
-VeriPass is an **anti-counterfeit product-passport platform** that combines:
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                                                                     │
-│   🛂 PASSPORT        🤖 AI AGENTS       💰 x402 PAYMENTS           │
-│   ─────────────      ─────────────      ───────────────            │
-│   Chain-of-custody   7 specialist       Pay-per-use in ALGO        │
-│   with crypto        agents that        (0.002–0.005 ALGO)         │
-│   signed checkpoints auto-research      on Algorand TestNet        │
-│                                         ───────────────            │
-│                                         Machine-to-machine         │
-│                                         commerce                    │
-│                                                                     │
-│   🔬 RESEARCH AGENT  📦 PRODUCT        📱 MOBILE FIRST             │
-│   ─────────────      ─────────────      ───────────────            │
-│   Pays 3 services    Every product     Pera Wallet integration     │
-│   in sequence        gets a unique     React SPA with real-time    │
-│   (market→news→      verification      QR scanning                 │
-│    report)           passport                                   │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-**Key Insight**: Instead of forcing users into expensive subscriptions, VeriPass lets AI agents auto-pay micro-amounts per action — just like how Claude Code agents auto-buy tools when needed.
-
----
-
-## 🚀 Why x402? (Value in This Project)
-
-The x402 protocol (HTTP 402 Payment Required) is **not forced** — it's the natural fit:
-
-<table>
-<tr>
-<td width="50%">
-
-### ❌ Without x402
-
-- Users must buy credit packs (minimum ₹50)
-- AI agents can't autonomously pay for services
-- No machine-to-machine commerce
-- Expensive payment gateway infrastructure
-
-</td>
-<td width="50%">
-
-### ✅ With x402
-
-- **Pay-per-use**: 0.002 ALGO (~₹0.14) per scan
-- **Agent autonomy**: Auto-pay without human intervention
-- **Machine-to-machine**: Agent A pays Agent B instantly
-- **No middlemen**: Direct Algorand transactions
-
-</td>
-</tr>
-</table>
-
-### 🔄 Real Example Flow
-
-```
-📱 User scans QR → 🤖 Agent auto-pays 0.002 ALGO → 📦 Gets full supply-chain passport
-🗣️ User asks AI "compare these products" → 🤖 Agent pays 0.005 ALGO → 📊 Gets comparison
-🔬 Research agent runs → 💰 market-data (0.003) → 📰 news (0.003) → 📄 report (0.003)
-```
-
-Every payment is a real Algorand TestNet transaction, viewable on [Lora Explorer](https://lora.algokit.io/testnet/account/NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM).
+VeriPass solves this with the **x402 HTTP Payment Protocol** — AI agents pay per-use in ALGO to verify products, check history, and analyze supply chains. No subscriptions. Just trust.
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         🛂 VeriPass System                          │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ┌──────────┐     ┌──────────────┐     ┌──────────────────┐        │
-│  │ 📱 Mobile │────▶│ ⚛️ React SPA  │────▶│ 🔥 Hono Backend  │        │
-│  │  Browser  │◀────│  (Vite + TS) │◀────│   (Node.js)      │        │
-│  │  + Pera   │     └──────────────┘     └────────┬─────────┘        │
-│  │  Wallet   │                                   │                  │
-│  └──────────┘     ┌──────────────────────────────┼────────┐        │
-│                    │                              │        │        │
-│                    ▼                              ▼        ▼        │
-│             ┌────────────┐  ┌──────────┐  ┌─────────────┐          │
-│             │ 🗃️ SQLite  │  │ 🤖 Gemini│  │ 💰 x402     │          │
-│             │  DB        │  │  AI      │  │  Payment    │          │
-│             │  (users,   │  │ (7 agents│  │  (Algo      │          │
-│             │  products, │  │  + tools)│  │  TestNet)   │          │
-│             │  payments) │  └──────────┘  └──────┬──────┘          │
-│             └────────────┘                       │                  │
-│                    ┌──────────────────────────────┘                 │
-│                    ▼                                                │
-│             ┌──────────────┐                                        │
-│             │ ⛓️ Algorand  │                                        │
-│             │   TestNet    │                                        │
-│             │   (Lora)     │                                        │
-│             └──────────────┘                                        │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### 🛠️ Tech Stack
-
-| Layer | Technology | Badge |
-|---|---|---|
-| 🎨 Frontend | React 19, Vite, TypeScript, Tailwind CSS | `react` `vite` `tailwind` |
-| 🔗 Wallet | Pera WalletConnect | `pera` |
-| 🔥 Backend | Hono (Node.js), SQLite (node:sqlite) | `hono` `sqlite` |
-| 🤖 AI | Google Gemini (gemini-3.6-flash) — 7 agents | `gemini` |
-| 💰 Payments | x402 protocol, Algorand TestNet (algosdk v3) | `x402` `algorand` |
-| 🏦 Facilitator | GoPlausible x402 facilitator | `goplausible` |
-| ☁️ Hosting | Render (free tier) | `render` |
-
-### 📦 Key Dependencies
-
-```json
-{
-  "@x402/hono": "^2.19.0",
-  "@x402/avm": "^2.19.0",
-  "@x402/core": "^2.19.0",
-  "@x402-avm/extensions": "^2.6.1",
-  "algosdk": "^3.6.0",
-  "@google/genai": "^2.18.0",
-  "@perawallet/connect": "^1.6.0",
-  "hono": "^4.13.2"
-}
+┌──────────────────────────────────────────────────────────────┐
+│                     🎨 React 19 Frontend                     │
+│  QR Scanner · Passport View · AI Chat · Wallet · Dashboard   │
+└──────────────────────┬───────────────────────────────────────┘
+                       │ REST API
+┌──────────────────────▼───────────────────────────────────────┐
+│                  ⚡ Hono Backend (Node.js)                   │
+│  Auth · Products · Payments · Signatures · Admin              │
+├──────────────────────────────────────────────────────────────┤
+│  🤖 7 AI Agents (Google Gemini)  ·  💰 x402 Micropayments   │
+├──────────────────────────────────────────────────────────────┤
+│  🗄️ SQLite (node:sqlite — zero native deps)                 │
+└──────────────────────┬───────────────────────────────────────┘
+                       │ x402 Payments
+┌──────────────────────▼───────────────────────────────────────┐
+│              🔗 Algorand TestNet · Pera Wallet                │
+│         GoPlausible Facilitator · Lora Explorer               │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📱 QR Code Categories
+## ✨ Key Features
 
-VeriPass supports product verification across multiple industries:
+### 🔍 Product Verification
+- **QR Code Scanning** — Scan any product code to verify authenticity
+- **Supply-Chain Passport** — Full chain-of-custody with cryptographically signed checkpoints
+- **Verdict Engine** — Confidence score (0–100) with color-coded trust badges
 
-| Category | Example Products | Use Case | Icon |
-|---|---|---|---|
-| 💊 **Pharmaceuticals** | Medicines, vaccines, supplements | Verify authenticity before consumption | 💊 |
-| 📱 **Electronics** | Sensors, chips, devices | Prevent counterfeit components | 📱 |
-| 🍵 **Food & Beverage** | Tea, spices, organic produce | Track farm-to-shelf journey | 🍵 |
-| 👗 **Fashion** | Luxury goods, branded apparel | Authenticate premium products | 👗 |
-| ⚙️ **Industrial** | Machine parts, safety equipment | Ensure compliance and quality | ⚙️ |
+### 🤖 AI Agent System (7 Specialist Agents)
+- **Inventory Agent** — Stock management and alerts
+- **Passport Agent** — Product history and provenance
+- **Market Agent** — Pricing intelligence and trends
+- **Usage Agent** — Product lifecycle analysis
+- **Proof Agent** — Verification and authentication
+- **Search Agent** — Product discovery and recommendations
+- **Compare Agent** — Cross-product analysis
+
+### 💰 x402 Micropayments
+- **Pay-per-use** — 0.002–0.005 ALGO per AI action
+- **No subscriptions** — Just trust and pay
+- **On-chain receipts** — Every payment verified on Algorand TestNet
+- **Spend-policy guard** — Budget limits and spending caps
+
+### ✍️ Digital Signatures
+- **ed25519 key pairs** — Producer/Logistics/Retailer sign checkpoints
+- **Cryptographic proof** — Tamper-evident supply-chain records
+
+### 🔐 Security
+- **HMAC-signed tokens** — Server-side session management
+- **OTP email verification** — Password reset and 2FA
+- **Backup codes** — Account recovery
+- **Biometric toggle** — WebAuthn support
 
 ---
 
-## 🤖 AI Agentic System
+## 🚀 Quick Start
 
-VeriPass features **7 specialist AI agents** that work together via x402 micropayments:
+### 🌐 Live Demo
 
-<table>
-<tr>
-<td>
+**[veripass-t3ef.onrender.com](https://veripass-t3ef.onrender.com)**
 
-| Agent | Function | Price |
-|---|---|---|
-| 📦 **Inventory** | Lists bookmarked products with verdicts | 0.003 ALGO |
-| 🛂 **Passport** | Full chain-of-custody for one product | 0.003 ALGO |
-| 📈 **Market** | Market price lookup (INR) | 0.004 ALGO |
-| 📊 **Usage** | Usage stats and wallet balance | 0.003 ALGO |
-| ✅ **Proof** | Dashboard stats: payments & signatures | 0.004 ALGO |
-| 🔍 **Search** | Full catalogue search | 0.005 ALGO |
-| ⚖️ **Compare** | Side-by-side product comparison | 0.005 ALGO |
+Demo credentials:
+| Username | Password | Role |
+|----------|----------|------|
+| `user` | `user` | Buyer/Scanner |
+| `pro` | `pro` | Producer |
+| `log` | `log` | Logistics |
+| `ret` | `ret` | Retailer |
+| `ravi` | `ravi` | User |
 
-</td>
-<td align="center">
+### 📋 Judge Demo Page
 
-<img src="https://raw.githubusercontent.com/ADITYA02NM/VeriPass/main/assets/ai-agents.svg" alt="AI Agents" width="200" />
+**[veripass-t3ef.onrender.com/demo](https://veripass-t3ef.onrender.com/demo)** — Grid of 15 product QR tiles for quick walkthrough.
 
-</td>
-</tr>
-</table>
+### 🌐 Agent Network Monitor
 
-### 🔬 Research Agent (Agentic Payments Demo)
+**[veripass-t3ef.onrender.com/agent](https://veripass-t3ef.onrender.com/agent)** — Live visualization of AI agent payments.
 
-Demonstrates **machine-to-machine payments** by paying 3 services in sequence:
+> ⚠️ **Note**: Render cold-starts on first visit. Wait 15–20 seconds if the page appears blank.
+
+---
+
+## 🔧 Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, Vite, TypeScript, Tailwind CSS |
+| Backend | Hono (Node.js), SQLite (built-in) |
+| AI | Google Gemini (7 specialist agents + orchestrator) |
+| Payments | x402 Protocol, Algorand TestNet, Pera Wallet |
+| Security | HMAC tokens, ed25519 signatures, WebAuthn |
+| Infrastructure | Render (auto-deploy from GitHub) |
+
+---
+
+## 📁 Project Structure
 
 ```
-🔬 Research Query → 📈 market-data (0.003 ALGO) → 📰 news-summary (0.003 ALGO) → 📄 report-generate (0.003 ALGO)
+VeriPass/
+├── backend/
+│   ├── server.js          # Main Hono server (all routes)
+│   ├── db.js              # SQLite schema + seed data
+│   ├── auth.js            # HMAC JWT auth + password hashing
+│   ├── ai.js              # 7 AI agents + Gemini integration
+│   ├── agents.js          # Research Agent + x402 demo
+│   ├── x402.js            # Algorand payment execution
+│   └── data/              # SQLite DB + wallet config
+├── veripass/
+│   └── src/
+│       ├── App.tsx        # SPA router + state management
+│       ├── screens/       # 13 screens (Login, Scan, AI Chat, etc.)
+│       ├── components/    # TopBar, BottomNav, PassportAnimation
+│       └── lib/           # API client, Pera wallet, x402 pay
+├── assets/                # SVG icons and banners
+└── render.yaml            # Render Blueprint (auto-deploy)
 ```
 
-Each payment is checked against a **spend-policy guard** (max 3 calls per run) before execution.
-
-**🌐 Live demo**: [veripass-t3ef.onrender.com/agent](https://veripass-t3ef.onrender.com/agent)
-
 ---
 
-## 🔗 Transaction Links (Algorand TestNet)
+## 🎬 Demo Workflow
 
-All payments are real Algorand TestNet transactions:
-
-| Transaction Type | Amount | Explorer |
-|---|---|---|
-| 📦 Product Verification | 0.002 ALGO | [View Account](https://lora.algokit.io/testnet/account/NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM) |
-| 🤖 AI Agent Query | 0.003–0.005 ALGO | [View Account](https://lora.algokit.io/testnet/account/NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM) |
-| 🔬 Research Agent Run | 0.009 ALGO total | [View Account](https://lora.algokit.io/testnet/account/NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM) |
-| 📋 History Lookup | 0.001 ALGO | [View Account](https://lora.algokit.io/testnet/account/NYRK2742GDQ7KIRNGWCHKVUKVUZTFDXVKWXT3N5HTAV6IMWWDSPNT7ZOPM) |
-
-> 💡 All transactions are direct wallet-to-wallet ALGO transfers. Each user has a unique TestNet wallet.
-
----
-
-## 🌍 Societal Benefit
-
-<table>
-<tr>
-<td width="33%">
-
-### 👥 For Consumers
-
-- 🔍 **Verify before you buy**
-- 🛡️ **Protect against counterfeits**
-- 💰 **Transparent pricing**
-
-</td>
-<td width="33%">
-
-### 🏢 For Businesses
-
-- 💸 **Low-cost verification** (~₹0.14/scan)
-- 🤖 **AI-powered insights**
-- 📦 **Supply-chain visibility**
-
-</td>
-<td width="33%">
-
-### 🇮🇳 For India
-
-- 🏠 **Made in India**
-- 🚫 **Anti-counterfeit**
-- 💻 **Digital India**
-
-</td>
-</tr>
-</table>
-
----
-
-## 🇮🇳 Why Made in India?
-
-| Aspect | Description |
-|---|---|
-| 🎯 **Problem** | Counterfeit products disproportionately affect Indian consumers |
-| 🛠️ **Solution** | Built by students at Bangalore Institute of Engineering |
-| 📈 **Impact** | Scalable to Indian supply chains (pharma, food, electronics) |
-| 💰 **Cost** | Micro-payments in ALGO make verification accessible to all |
-
----
-
-## 🚀 Getting Started
-
-### ⚡ Quick Start (Demo)
-
-1. 🌐 Visit [veripass-t3ef.onrender.com](https://veripass-t3ef.onrender.com)
-2. 🔐 Login: `user` / `user` or connect via **Pera Wallet**
-3. 📱 Scan a product QR code or enter manually (e.g., `AS-SENSOR-2026-001`)
-4. 📦 View supply-chain passport and verification verdict
-5. 🤖 Try the AI assistant for product queries
-
-### 💻 Local Development
-
-```bash
-# 📥 Clone the repo
-git clone https://github.com/ADITYA02NM/VeriPass.git
-cd VeriPass
-
-# 🔧 Backend setup
-cd backend
-npm install
-cp .env.example .env  # Add your GEMINI_API_KEY
-npm run dev
-
-# 🎨 Frontend setup (new terminal)
-cd veripass
-npm install
-npm run dev
-
-# 🌐 Open http://localhost:3000
-```
-
-### 🔐 Environment Variables
-
-```env
-# Backend
-PORT=8080
-GEMINI_API_KEY=your-gemini-key
-VERIPASS_SECRET=your-hmac-secret
-```
-
-> 💡 Wallet addresses and payment config are in `backend/data/wallets.json` (gitignored).
-
-### 🧪 TestNet Accounts
-
-| Account | Address | Role |
-|---|---|---|
-| 🏦 **Platform Receiver** | `NYRK2742GDQ...SPNT7ZOPM` | Merchant |
-| 👤 **User** | `QSOFH5G2PS...T5Y4QWEI746B7E` | Buyer/Scanner |
-| 🏭 **Producer** | `EKLDBPKGIN...4X3QWGFQCYJ5V4` | Producer |
-| 🚚 **Logistics** | `RCZT2Z3WKA...HCXW4ZQP54ZE` | Logistics |
-| 🏪 **Retailer** | `HFHJPLT3QW...2ACYOKRO4KCU` | Retailer |
-
-> 💡 Fund wallets via the [Lora TestNet Faucet](https://lora.algokit.io/testnet/fund)
+1. 🔐 **Login** — Sign in with `user` / `user`
+2. 📱 **Scan** — Open `/demo`, tap a QR tile, scan with phone camera
+3. 🛂 **Passport** — View full supply-chain history and verdict
+4. 🤖 **AI Chat** — Ask AI agents about the product (auto-pays 0.003 ALGO)
+5. 🔬 **Research Agent** — Run 3 sequential x402 payments
+6. 💰 **Wallet** — Check spending history on Algorand TestNet
+7. 📦 **Vault** — View bookmarked products
+8. ✍️ **Signatures** — Create ed25519 key pair and sign checkpoint
+9. 🔗 **Verify** — Re-scan to see updated verification record
 
 ---
 
@@ -501,29 +243,17 @@ VERIPASS_SECRET=your-hmac-secret
 
 ---
 
-## 🎬 Demo
+## 🧪 TestNet Accounts
 
-### 📋 Judge Demo Page
+| Account | Address | Role |
+|---|---|---|
+| 🏦 **Platform Receiver** | `NYRK2742GDQ...SPNT7ZOPM` | Merchant |
+| 👤 **User** | `QSOFH5G2PS...T5Y4QWEI746B7E` | Buyer/Scanner |
+| 🏭 **Producer** | `EKLDBPKGIN...4X3QWGFQCYJ5V4` | Producer |
+| 🚚 **Logistics** | `RCZT2Z3WKA...HCXW4ZQP54ZE` | Logistics |
+| 🏪 **Retailer** | `HFHJPLT3QW...2ACYOKRO4KCU` | Retailer |
 
-**[veripass-t3ef.onrender.com/demo](https://veripass-t3ef.onrender.com/demo)**
-
-A guided walkthrough showing:
-
-1. 📱 Product scanning and verification
-2. 🛂 Supply-chain passport display
-3. 🤖 AI agent queries with x402 payments
-4. 🔬 Research agent running 3 sequential payments
-5. 💰 Payment history on Algorand TestNet
-
-### 🌐 Agent Network Monitor
-
-**[veripass-t3ef.onrender.com/agent](https://veripass-t3ef.onrender.com/agent)**
-
-Live visualization of:
-
-- 🔬 Research agent paying 3 services in sequence
-- 🛡️ Spend-policy guard enforcing budget limits
-- 📊 Real-time transaction logging
+> 💡 Fund wallets via the [Lora TestNet Faucet](https://lora.algokit.io/testnet/fund)
 
 ---
 
@@ -553,6 +283,15 @@ Live visualization of:
 
 ---
 
+## 🏆 Hackathon Submissions
+
+| Hackathon | Link |
+|-----------|------|
+| **Devpost** | [veripass on devpost](https://devpost.com/software/veripass) |
+| **DoraHacks** | [veripass on dorahacks](https://dorahacks.io/buidl/48115/) |
+
+---
+
 ## 📄 License
 
 <div align="center">
@@ -569,6 +308,6 @@ MIT License — Built for the x402 Pre-Hack on Algorand
 
 *VeriPass — Every product has a story. Verify it.* 🛂
 
-[📺 Watch Demo](https://www.youtube.com/shorts/pzOABdKjVbA) · [🌐 Live App](https://veripass-t3ef.onrender.com) · [💻 GitHub](https://github.com/ADITYA02NM/VeriPass)
+[📺 Watch Demo](https://www.youtube.com/shorts/pzOABdKjVbA) · [🌐 Live App](https://veripass-t3ef.onrender.com) · [💻 GitHub](https://github.com/ADITYA02NM/VeriPass) · [📝 Devpost](https://devpost.com/software/veripass) · [⚡ DoraHacks](https://dorahacks.io/buidl/48115/)
 
 </div>
