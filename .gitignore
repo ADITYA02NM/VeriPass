@@ -40,3 +40,5 @@ wallets.json
 # Open Dev data
 open-dev-data/
 
+# Judges only (not public)
+FOR_JUDGES.txt
