@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="agentBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f3460"/>
+      <stop offset="100%" style="stop-color:#1a1a2e"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Central Hub -->
+  <circle cx="100" cy="100" r="30" fill="url(#agentBg)" stroke="#f5cd79" stroke-width="2"/>
+  <text x="100" y="108" text-anchor="middle" fill="#f5cd79" font-size="24">🤖</text>
+  
+  <!-- Agent 1 - Top -->
+  <circle cx="100" cy="25" r="18" fill="#1a3a5c" stroke="#4CAF50" stroke-width="1.5"/>
+  <text x="100" y="30" text-anchor="middle" fill="white" font-size="14">📦</text>
+  <line x1="100" y1="43" x2="100" y2="70" stroke="#4CAF50" stroke-width="1.5" stroke-dasharray="4,2"/>
+  
+  <!-- Agent 2 - Top Right -->
+  <circle cx="165" cy="45" r="18" fill="#1a3a5c" stroke="#2196F3" stroke-width="1.5"/>
+  <text x="165" y="50" text-anchor="middle" fill="white" font-size="14">🛂</text>
+  <line x1="153" y1="58" x2="125" y2="78" stroke="#2196F3" stroke-width="1.5" stroke-dasharray="4,2"/>
+  
+  <!-- Agent 3 - Right -->
+  <circle cx="175" cy="100" r="18" fill="#1a3a5c" stroke="#FF9800" stroke-width="1.5"/>
+  <text x="175" y="105" text-anchor="middle" fill="white" font-size="14">📈</text>
+  <line x1="157" y1="100" x2="130" y2="100" stroke="#FF9800" stroke-width="1.5" stroke-dasharray="4,2"/>
+  
+  <!-- Agent 4 - Bottom Right -->
+  <circle cx="165" cy="155" r="18" fill="#1a3a5c" stroke="#9C27B0" stroke-width="1.5"/>
+  <text x="165" y="160" text-anchor="middle" fill="white" font-size="14">📊</text>
+  <line x1="153" y1="143" x2="125" y2="122" stroke="#9C27B0" stroke-width="1.5" stroke-dasharray="4,2"/>
+  
+  <!-- Agent 5 - Bottom -->
+  <circle cx="100" cy="175" r="18" fill="#1a3a5c" stroke="#F44336" stroke-width="1.5"/>
+  <text x="100" y="180" text-anchor="middle" fill="white" font-size="14">✅</text>
+  <line x1="100" y1="157" x2="100" y2="130" stroke="#F44336" stroke-width="1.5" stroke-dasharray="4,2"/>
+  
+  <!-- Agent 6 - Bottom Left -->
+  <circle cx="35" cy="155" r="18" fill="#1a3a5c" stroke="#00BCD4" stroke-width="1.5"/>
+  <text x="35" y="160" text-anchor="middle" fill="white" font-size="14">🔍</text>
+  <line x1="47" y1="143" x2="75" y2="122" stroke="#00BCD4" stroke-width="1.5" stroke-dasharray="4,2"/>
+  
+  <!-- Agent 7 - Left -->
+  <circle cx="25" cy="100" r="18" fill="#1a3a5c" stroke="#E91E63" stroke-width="1.5"/>
+  <text x="25" y="105" text-anchor="middle" fill="white" font-size="14">⚖️</text>
+  <line x1="43" y1="100" x2="70" y2="100" stroke="#E91E63" stroke-width="1.5" stroke-dasharray="4,2"/>
+  
+  <!-- Agent 8 - Top Left -->
+  <circle cx="35" cy="45" r="18" fill="#1a3a5c" stroke="#8BC34A" stroke-width="1.5"/>
+  <text x="35" y="50" text-anchor="middle" fill="white" font-size="14">🔬</text>
+  <line x1="47" y1="58" x2="75" y2="78" stroke="#8BC34A" stroke-width="1.5" stroke-dasharray="4,2"/>
+  
+  <!-- Price Tags -->
+  <rect x="75" y="5" width="50" height="14" rx="7" fill="#4CAF50" opacity="0.8"/>
+  <text x="100" y="15" text-anchor="middle" fill="white" font-size="8" font-weight="bold">0.003 ALGO</text>
+  
+  <rect x="145" y="25" width="50" height="14" rx="7" fill="#2196F3" opacity="0.8"/>
+  <text x="170" y="35" text-anchor="middle" fill="white" font-size="8" font-weight="bold">0.003 ALGO</text>
+</svg>
