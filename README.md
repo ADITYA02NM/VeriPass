@@ -2,6 +2,8 @@
 
 # ⚡ VeriPass
 
+<img src="https://raw.githubusercontent.com/ADITYA02NM/VeriPass/main/assets/passport-banner.svg" alt="VeriPass Banner" width="600" />
+
 ### x402 Agentic Product Passport on Algorand
 
 **Verify any product's authenticity and supply-chain provenance with AI-powered agents and micropayments.**
@@ -12,9 +14,7 @@
 [![x402](https://img.shields.io/badge/x402-Protocol-FF6B35?style=flat)](https://x402.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](https://opensource.org/licenses/MIT)
 
-[📺 Watch Demo](https://www.youtube.com/shorts/pzOABdKjVbA) · [🌐 Live App](https://veripass-t3ef.onrender.com) · [💻 GitHub](https://github.com/ADITYA02NM/VeriPass)
-
-[![Devpost](https://img.shields.io/badge/Devpost-VeriPass-1B3A5C?style=for-the-badge&logo=devpost)](https://devpost.com/software/veripass) · [![DoraHacks](https://img.shields.io/badge/DoraHacks-Buidl-48115-FD7E14?style=for-the-badge&logo=dorahacks)](https://dorahacks.io/buidl/48115/)
+[📺 Watch Demo](https://www.youtube.com/shorts/pzOABdKjVbA) · [🌐 Live App](https://veripass-t3ef.onrender.com) · [💻 GitHub](https://github.com/ADITYA02NM/VeriPass) · [📝 Devpost](https://devpost.com/software/veripass) · [⚡ DoraHacks](https://dorahacks.io/buidl/48115/)
 
 </div>
 
@@ -22,13 +22,25 @@
 
 ## 🎯 The Problem
 
+<div align="center">
+
 > **Counterfeit products cost India ₹1.5 lakh crore annually** — and there's no affordable way for consumers or AI agents to verify product authenticity and supply-chain provenance in real time.
 
 VeriPass solves this with the **x402 HTTP Payment Protocol** — AI agents pay per-use in ALGO to verify products, check history, and analyze supply chains. No subscriptions. Just trust.
 
+<img src="https://raw.githubusercontent.com/ADITYA02NM/VeriPass/main/assets/passport-icon.svg" alt="Passport Icon" width="120" />
+
+</div>
+
 ---
 
 ## 🏗️ Architecture
+
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/ADITYA02NM/VeriPass/main/assets/ai-agents.svg" alt="AI Agents" width="400" />
+
+</div>
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -285,10 +297,10 @@ VeriPass/
 
 ## 🏆 Hackathon Submissions
 
-| Hackathon | Link |
-|-----------|------|
-| **Devpost** | [veripass on devpost](https://devpost.com/software/veripass) |
-| **DoraHacks** | [veripass on dorahacks](https://dorahacks.io/buidl/48115/) |
+| Hackathon | Link | Status |
+|-----------|------|--------|
+| **Devpost** | [veripass on devpost](https://devpost.com/software/veripass) | ✅ Submitted |
+| **DoraHacks** | [veripass on dorahacks](https://dorahacks.io/buidl/48115/) | ✅ Submitted |
 
 ---
 
