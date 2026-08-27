@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
+  <defs>
+    <linearGradient id="footerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0f3460"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Passport Mini -->
+  <rect x="15" y="10" width="50" height="60" rx="4" fill="url(#footerBg)" stroke="#f5cd79" stroke-width="1.5"/>
+  <rect x="18" y="13" width="44" height="54" rx="2" fill="#0d1b2a"/>
+  
+  <!-- Emblem -->
+  <circle cx="40" cy="32" r="12" fill="none" stroke="#f5cd79" stroke-width="1"/>
+  <text x="40" y="37" text-anchor="middle" fill="#f5cd79" font-size="14" font-weight="bold">V</text>
+  
+  <!-- Lines -->
+  <rect x="26" y="50" width="28" height="2" rx="1" fill="#f5cd79" opacity="0.5"/>
+  <rect x="30" y="55" width="20" height="1.5" rx="0.75" fill="#f5cd79" opacity="0.3"/>
+  
+  <!-- Heart -->
+  <text x="40" y="68" text-anchor="middle" fill="#f5cd79" font-size="8">❤️</text>
+</svg>
